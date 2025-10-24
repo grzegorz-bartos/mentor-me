@@ -92,7 +92,22 @@
                                 </div>
                                 <a href="{% url 'listing-delete' listing.id %}" class="btn btn-danger w-100">Delete Listing</a>
                             {% else %}
-                                <p class="text-muted small">Contact the tutor to arrange sessions.</p>
+                                {% if user.is_authenticated %}
+                                    <a href="{% url 'create-booking' listing.id %}" class="btn btn-primary w-100">Book a Session</a>
+                                {% else %}
+                                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary w-100">Login to Book</a>
+                                {% endif %}
+                            {% endif %}
+                            {% if availabilities %}
+                                <hr>
+                                <div class="mb-3">
+                                    <strong>Availability:</strong>
+                                    <ul class="list-unstyled mt-2 small">
+                                        {% for avail in availabilities %}
+                                            <li>{{ avail.get_day_of_week_display }}: {{ avail.start_time|time:"g:i A" }} - {{ avail.end_time|time:"g:i A" }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
                             {% endif %}
                         </div>
                     </div>

@@ -174,11 +174,21 @@
                                 <p class="text-muted mb-0">You haven't made any offers yet.</p>
                             {% endif %}
                         </div>
+                        {% if user.can_post_tutor %}
+                            <div class="p-4 border rounded-3 mt-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Booking Requests (As Tutor)</h5>
+                                    <a class="btn btn-outline-primary btn-sm" href="{% url 'my-bookings' %}">Manage Requests</a>
+                                </div>
+                                <p class="text-muted small mb-0 mt-2">Students who want to book lessons with you</p>
+                            </div>
+                        {% endif %}
                         <div class="p-4 border rounded-3 mt-4">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Lesson Bookings</h5>
-                                <a class="btn btn-outline-primary btn-sm" href="{% url 'my-bookings' %}">View All Bookings</a>
+                                <h5 class="mb-0">My Booked Lessons (As Student)</h5>
+                                <a class="btn btn-outline-primary btn-sm" href="{% url 'student-bookings' %}">View My Lessons</a>
                             </div>
+                            <p class="text-muted small mb-0 mt-2">Lessons you have booked with tutors</p>
                         </div>
                     </div>
                 </div>

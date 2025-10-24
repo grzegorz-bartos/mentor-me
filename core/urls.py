@@ -15,6 +15,7 @@ from jobs.views import (
     take_job,
 )
 from listings.views import (
+    CreateBookingView,
     CreateMentorListingView,
     CreateTutorListingView,
     DeleteAvailabilityView,
@@ -24,6 +25,7 @@ from listings.views import (
     ManageAvailabilityView,
     MentorListView,
     MyBookingsView,
+    StudentBookingsView,
     UpdateBookingStatusView,
 )
 from subscriptions import views as subscriptions_views
@@ -66,6 +68,12 @@ urlpatterns = [
         UpdateBookingStatusView.as_view(),
         name="update-booking-status",
     ),
+    path(
+        "listings/<int:listing_id>/book/",
+        CreateBookingView.as_view(),
+        name="create-booking",
+    ),
+    path("my-lessons/", StudentBookingsView.as_view(), name="student-bookings"),
     path(
         "mentoring/create/",
         CreateMentorListingView.as_view(),

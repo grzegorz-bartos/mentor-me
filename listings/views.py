@@ -8,7 +8,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
 from core.mixins import CapabilityRequiredMixin
 
-from .forms import AvailabilityForm, ListingCreationForm
+from .forms import AvailabilityForm, BookingForm, ListingCreationForm
 from .models import Availability, Booking, Listing
 
 
@@ -136,6 +136,12 @@ class ListingDetailView(DetailView):
     def get_queryset(self):
         return super().get_queryset().select_related("user").filter(is_active=True)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["availabilities"] = self.object.availabilities.filter(is_active=True)
+        context["booking_form"] = BookingForm()
+        return context
+
 
 class ListingDeleteView(LoginRequiredMixin, DeleteView):
     model = Listing
@@ -220,3 +226,37 @@ class UpdateBookingStatusView(LoginRequiredMixin, View):
             booking.save()
             messages.success(request, f"Booking {status}.")
         return redirect("my-bookings")
+
+
+class CreateBookingView(LoginRequiredMixin, CreateView):
+    model = Booking
+    form_class = BookingForm
+    template_name = "create-booking.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        self.listing = get_object_or_404(Listing, pk=self.kwargs["listing_id"])
+        context["listing"] = self.listing
+        context["availabilities"] = self.listing.availabilities.filter(is_active=True)
+        return context
+
+    def form_valid(self, form):
+        self.listing = get_object_or_404(Listing, pk=self.kwargs["listing_id"])
+        form.instance.listing = self.listing
+        form.instance.student = self.request.user
+        messages.success(self.request, "Booking request submitted successfully!")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("student-bookings")
+
+
+class StudentBookingsView(LoginRequiredMixin, ListView):
+    model = Booking
+    template_name = "student-bookings.html"
+    context_object_name = "bookings"
+
+    def get_queryset(self):
+        return Booking.objects.filter(student=self.request.user).select_related(
+            "listing", "listing__user"
+        )
