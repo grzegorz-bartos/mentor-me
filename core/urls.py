@@ -58,7 +58,7 @@ urlpatterns = [
     path("mentoring/", listings_views.MentorListView.as_view(), name="mentors"),
     path("pricing/", subscriptions_views.PricingView.as_view(), name="pricing"),
     path(
-        "pricing/change/<int:plan_id>/",
+        "pricing/change/<int:plan_id>/", # pricing/<int:plan_id>/change
         subscriptions_views.change_plan,
         name="change-plan",
     ),

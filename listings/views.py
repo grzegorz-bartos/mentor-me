@@ -47,7 +47,7 @@ class MentorListView(ListView):
     context_object_name = "listings"
     paginate_by = 9  # <- pagination
 
-    def get_queryset(self):
+    def get_queryset(self): # django-filter
         qs = (
             super()
             .get_queryset()

@@ -26,7 +26,7 @@ class PricingView(TemplateView):
 
 
 @login_required
-def change_plan(request, plan_id):
+def change_plan(request, plan_id): # TODO CBV refactor.
     plan = get_object_or_404(Plan, pk=plan_id)
     acc: Account = request.user
 
@@ -35,7 +35,6 @@ def change_plan(request, plan_id):
         return _redirect_back(request)
 
     with transaction.atomic():
-        # Keep user's role_level in sync with plan level
         acc.role_level = plan.level
         acc.save(update_fields=["role_level"])
 
