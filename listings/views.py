@@ -233,17 +233,35 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
     form_class = BookingForm
     template_name = "create-booking.html"
 
+    def get_listing(self):
+        if not hasattr(self, "_listing"):
+            self._listing = get_object_or_404(Listing, pk=self.kwargs["listing_id"])
+        return self._listing
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["listing"] = self.get_listing()
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        self.listing = get_object_or_404(Listing, pk=self.kwargs["listing_id"])
-        context["listing"] = self.listing
-        context["availabilities"] = self.listing.availabilities.filter(is_active=True)
+        context["listing"] = self.get_listing()
+        context["availabilities"] = self.get_listing().availabilities.filter(is_active=True)
         return context
 
     def form_valid(self, form):
-        self.listing = get_object_or_404(Listing, pk=self.kwargs["listing_id"])
-        form.instance.listing = self.listing
+        from datetime import datetime, timedelta
+
+        form.instance.listing = self.get_listing()
         form.instance.student = self.request.user
+
+        start_time = form.cleaned_data["start_time"]
+        duration_hours = form.cleaned_data["duration_hours"]
+
+        start_dt = datetime.combine(datetime.today(), start_time)
+        end_dt = start_dt + timedelta(hours=duration_hours)
+        form.instance.end_time = end_dt.time()
+
         messages.success(self.request, "Booking request submitted successfully!")
         return super().form_valid(form)
 
