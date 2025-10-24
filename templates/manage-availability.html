@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <main class="main">
+        <div class="page-title" data-aos="fade">
+            <div class="heading">
+                <div class="container">
+                    <div class="row d-flex justify-content-center text-center">
+                        <div class="col-lg-8">
+                            <h1>Manage Availability</h1>
+                            <p class="mb-0">{{ listing.title }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <section class="section">
+            <div class="container" data-aos="fade-up">
+                <div class="row">
+                    <div class="col-lg-8 offset-lg-2">
+                        <div class="p-4 border rounded-3 mb-4">
+                            <h5 class="mb-3">Add Availability</h5>
+                            <form method="post">
+                                {% csrf_token %}
+                                {{ form|crispy }}
+                                <button type="submit" class="btn btn-primary">Add Time Slot</button>
+                                <a href="{% url 'profile' %}" class="btn btn-secondary">Back to Profile</a>
+                            </form>
+                        </div>
+                        <div class="p-4 border rounded-3">
+                            <h5 class="mb-3">Current Availability</h5>
+                            {% if availabilities %}
+                                <ul class="list-group">
+                                    {% for avail in availabilities %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ avail.get_day_of_week_display }}</strong>
+                                                <span class="ms-2">{{ avail.start_time|time:"g:i A" }} - {{ avail.end_time|time:"g:i A" }}</span>
+                                            </div>
+                                            <form method="post" action="{% url 'delete-availability' avail.id %}" style="margin: 0;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                            </form>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-muted mb-0">No availability set yet. Add your first time slot above.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+{% endblock %}

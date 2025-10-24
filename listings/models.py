@@ -27,6 +27,7 @@ class Listing(models.Model):
     subject = models.CharField(max_length=120, blank=True)
     category = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
+    max_hours_per_booking = models.PositiveIntegerField(default=3)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -34,3 +35,60 @@ class Listing(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()}: {self.title}"
+
+
+class Availability(models.Model):
+    class DayOfWeek(models.IntegerChoices):
+        MONDAY = 0, "Monday"
+        TUESDAY = 1, "Tuesday"
+        WEDNESDAY = 2, "Wednesday"
+        THURSDAY = 3, "Thursday"
+        FRIDAY = 4, "Friday"
+        SATURDAY = 5, "Saturday"
+        SUNDAY = 6, "Sunday"
+
+    listing = models.ForeignKey(
+        Listing, on_delete=models.CASCADE, related_name="availabilities"
+    )
+    day_of_week = models.IntegerField(choices=DayOfWeek.choices)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["day_of_week", "start_time"]
+        verbose_name_plural = "Availabilities"
+
+    def __str__(self):
+        return f"{self.listing.user.username} - {self.get_day_of_week_display()} {self.start_time}-{self.end_time}"
+
+
+class Booking(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        CONFIRMED = "confirmed", "Confirmed"
+        CANCELLED = "cancelled", "Cancelled"
+        COMPLETED = "completed", "Completed"
+
+    listing = models.ForeignKey(
+        Listing, on_delete=models.CASCADE, related_name="bookings"
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="bookings"
+    )
+    date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    duration_hours = models.DecimalField(max_digits=4, decimal_places=2)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PENDING
+    )
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.student.username} -> {self.listing.title} on {self.date} ({self.status})"

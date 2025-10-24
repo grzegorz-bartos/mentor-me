@@ -77,6 +77,10 @@
                                 </div>
                             </div>
                             <div class="mb-3">
+                                <strong>Max Session Length:</strong>
+                                <div>{{ listing.max_hours_per_booking }} hour{{ listing.max_hours_per_booking|pluralize }}</div>
+                            </div>
+                            <div class="mb-3">
                                 <strong>Posted:</strong>
                                 <div>{{ listing.created_at|date:"M j, Y" }}</div>
                             </div>

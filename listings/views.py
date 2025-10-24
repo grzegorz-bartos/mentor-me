@@ -1,13 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
 from core.mixins import CapabilityRequiredMixin
 
-from .forms import ListingCreationForm
-from .models import Listing
+from .forms import AvailabilityForm, ListingCreationForm
+from .models import Availability, Booking, Listing
 
 
 class ListingListView(ListView):
@@ -146,3 +148,75 @@ class ListingDeleteView(LoginRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, "Listing deleted successfully.")
         return super().delete(request, *args, **kwargs)
+
+
+class ManageAvailabilityView(LoginRequiredMixin, ListView):
+    model = Availability
+    template_name = "manage-availability.html"
+    context_object_name = "availabilities"
+
+    def get_queryset(self):
+        self.listing = get_object_or_404(
+            Listing, pk=self.kwargs["listing_id"], user=self.request.user
+        )
+        return self.listing.availabilities.filter(is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["listing"] = self.listing
+        context["form"] = AvailabilityForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.listing = get_object_or_404(
+            Listing, pk=self.kwargs["listing_id"], user=request.user
+        )
+        form = AvailabilityForm(request.POST)
+        if form.is_valid():
+            availability = form.save(commit=False)
+            availability.listing = self.listing
+            availability.save()
+            messages.success(request, "Availability added successfully.")
+            return redirect("manage-availability", listing_id=self.listing.id)
+
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        context["form"] = form
+        return self.render_to_response(context)
+
+
+class DeleteAvailabilityView(LoginRequiredMixin, DeleteView):
+    model = Availability
+
+    def get_queryset(self):
+        return super().get_queryset().filter(listing__user=self.request.user)
+
+    def get_success_url(self):
+        return reverse("manage-availability", kwargs={"listing_id": self.object.listing.id})
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Availability deleted successfully.")
+        return super().delete(request, *args, **kwargs)
+
+
+class MyBookingsView(LoginRequiredMixin, ListView):
+    model = Booking
+    template_name = "my-bookings.html"
+    context_object_name = "bookings"
+
+    def get_queryset(self):
+        return Booking.objects.filter(listing__user=self.request.user).select_related(
+            "student", "listing"
+        )
+
+
+class UpdateBookingStatusView(LoginRequiredMixin, View):
+    def post(self, request, booking_id, status):
+        booking = get_object_or_404(
+            Booking, pk=booking_id, listing__user=request.user
+        )
+        if status in dict(Booking.Status.choices):
+            booking.status = status
+            booking.save()
+            messages.success(request, f"Booking {status}.")
+        return redirect("my-bookings")

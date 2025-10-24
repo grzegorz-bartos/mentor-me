@@ -14,7 +14,18 @@ from jobs.views import (
     submit_offer,
     take_job,
 )
-from listings import views as listings_views
+from listings.views import (
+    CreateMentorListingView,
+    CreateTutorListingView,
+    DeleteAvailabilityView,
+    ListingDeleteView,
+    ListingDetailView,
+    ListingListView,
+    ManageAvailabilityView,
+    MentorListView,
+    MyBookingsView,
+    UpdateBookingStatusView,
+)
 from subscriptions import views as subscriptions_views
 
 urlpatterns = [
@@ -23,25 +34,41 @@ urlpatterns = [
     path("about/", home_views.AboutView.as_view(), name="about"),
     path("accounts/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
-    path("listings/", listings_views.ListingListView.as_view(), name="listings"),
+    path("listings/", ListingListView.as_view(), name="listings"),
     path(
         "listings/create/",
-        listings_views.CreateTutorListingView.as_view(),
+        CreateTutorListingView.as_view(),
         name="create-listing",
     ),
     path(
         "listings/<int:pk>/",
-        listings_views.ListingDetailView.as_view(),
+        ListingDetailView.as_view(),
         name="listing-detail",
     ),
     path(
         "listings/<int:pk>/delete/",
-        listings_views.ListingDeleteView.as_view(),
+        ListingDeleteView.as_view(),
         name="listing-delete",
     ),
     path(
+        "listings/<int:listing_id>/availability/",
+        ManageAvailabilityView.as_view(),
+        name="manage-availability",
+    ),
+    path(
+        "availability/<int:pk>/delete/",
+        DeleteAvailabilityView.as_view(),
+        name="delete-availability",
+    ),
+    path("bookings/", MyBookingsView.as_view(), name="my-bookings"),
+    path(
+        "bookings/<int:booking_id>/status/<str:status>/",
+        UpdateBookingStatusView.as_view(),
+        name="update-booking-status",
+    ),
+    path(
         "mentoring/create/",
-        listings_views.CreateMentorListingView.as_view(),
+        CreateMentorListingView.as_view(),
         name="create-mentor-listing",
     ),
     path("jobs/", JobListView.as_view(), name="jobs"),
@@ -55,7 +82,7 @@ urlpatterns = [
         accept_offer,
         name="job-accept-offer",
     ),
-    path("mentoring/", listings_views.MentorListView.as_view(), name="mentors"),
+    path("mentoring/", MentorListView.as_view(), name="mentors"),
     path("pricing/", subscriptions_views.PricingView.as_view(), name="pricing"),
     path(
         "pricing/change/<int:plan_id>/", # pricing/<int:plan_id>/change
