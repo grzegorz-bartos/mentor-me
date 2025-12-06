@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
-
 from home.forms import ContactForm
 from jobs.models import Job
 from listings.models import Listing
