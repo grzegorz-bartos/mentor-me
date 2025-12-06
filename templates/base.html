@@ -5,8 +5,10 @@
         <meta charset="utf-8">
         <meta content="width=device-width, initial-scale=1.0" name="viewport">
         <title>MentorMe</title>
-        <meta name="description" content="Connect with expert tutors and mentors for personalized learning and career guidance">
-        <meta name="keywords" content="tutoring, mentoring, education, learning, online tutoring, career mentorship">
+        <meta name="description"
+              content="Connect with expert tutors and mentors for personalized learning and career guidance">
+        <meta name="keywords"
+              content="tutoring, mentoring, education, learning, online tutoring, career mentorship">
         <!-- Favicons -->
         <link href="{% static 'img/favicon.png' %}" rel="icon">
         <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
@@ -69,6 +71,10 @@
                         <li>
                             <a href="/pricing/"
                                {% if request.path == '/pricing/' %}class="active"{% endif %}>Membership</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'contact' %}"
+                               {% if request.path == '/contact/' %}class="active"{% endif %}>Contact</a>
                         </li>
                     </ul>
                     <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>

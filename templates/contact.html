@@ -9,9 +9,7 @@
                     <div class="row d-flex justify-content-center text-center">
                         <div class="col-lg-8">
                             <h1>Contact</h1>
-                            <p class="mb-0">
-                                Have questions or need support? Reach out to us and we'll get back to you as soon as possible.
-                            </p>
+                            <p class="mb-0">Have questions or need support? Reach out to us and we'll get back to you as soon as possible.</p>
                         </div>
                     </div>
                 </div>
@@ -20,7 +18,7 @@
                 <div class="container">
                     <ol>
                         <li>
-                            <a href="home.html">Home</a>
+                            <a href="{% url 'home' %}">Home</a>
                         </li>
                         <li class="current">Contact</li>
                     </ol>
@@ -70,45 +68,16 @@
                         <!-- End Info Item -->
                     </div>
                     <div class="col-lg-8">
-                        <form action="forms/contact.php"
-                              method="post"
-                              class="php-email-form"
-                              data-aos="fade-up"
-                              data-aos-delay="200">
+                        <form method="post" data-aos="fade-up" data-aos-delay="200">
+                            {% csrf_token %}
                             <div class="row gy-4">
-                                <div class="col-md-6">
-                                    <input type="text"
-                                           name="name"
-                                           class="form-control"
-                                           placeholder="Your Name"
-                                           required="">
-                                </div>
-                                <div class="col-md-6 ">
-                                    <input type="email"
-                                           class="form-control"
-                                           name="email"
-                                           placeholder="Your Email"
-                                           required="">
-                                </div>
-                                <div class="col-md-12">
-                                    <input type="text"
-                                           class="form-control"
-                                           name="subject"
-                                           placeholder="Subject"
-                                           required="">
-                                </div>
-                                <div class="col-md-12">
-                                    <textarea class="form-control"
-                                              name="message"
-                                              rows="6"
-                                              placeholder="Message"
-                                              required=""></textarea>
-                                </div>
+                                <div class="col-md-6">{{ form.name }}</div>
+                                <div class="col-md-6">{{ form.email }}</div>
+                                <div class="col-md-12">{{ form.subject }}</div>
+                                <div class="col-md-12">{{ form.message }}</div>
                                 <div class="col-md-12 text-center">
-                                    <div class="loading">Loading</div>
-                                    <div class="error-message"></div>
-                                    <div class="sent-message">Your message has been sent. Thank you!</div>
-                                    <button type="submit">Send Message</button>
+                                    {% if form.errors %}<div class="alert alert-danger">Please correct the errors below.</div>{% endif %}
+                                    <button type="submit" class="btn btn-primary">Send Message</button>
                                 </div>
                             </div>
                         </form>

@@ -1,5 +1,8 @@
-from django.views.generic import TemplateView
+from django.contrib import messages
+from django.urls import reverse_lazy
+from django.views.generic import FormView, TemplateView
 
+from home.forms import ContactForm
 from jobs.models import Job
 from listings.models import Listing
 from users.models import Account
@@ -47,3 +50,25 @@ class AboutView(TemplateView):
         context["open_jobs"] = Job.objects.filter(status=Job.Status.OPEN).count()
 
         return context
+
+
+class ContactView(FormView):
+    template_name = "contact.html"
+    form_class = ContactForm
+    success_url = reverse_lazy("contact")
+
+    def form_valid(self, form):
+        # Extract form data
+        name = form.cleaned_data["name"]
+        email = form.cleaned_data["email"]
+        subject = form.cleaned_data["subject"]
+        message = form.cleaned_data["message"]
+
+        # TODO: Send email or save to database
+        # For now, just display a success message
+        messages.success(
+            self.request,
+            f"Thank you for contacting us, {name}! We'll get back to you at {email} soon.",
+        )
+
+        return super().form_valid(form)

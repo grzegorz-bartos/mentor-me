@@ -35,6 +35,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", home_views.HomeView.as_view(), name="home"),
     path("about/", home_views.AboutView.as_view(), name="about"),
+    path("contact/", home_views.ContactView.as_view(), name="contact"),
     path("accounts/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("listings/", ListingListView.as_view(), name="listings"),
@@ -99,7 +100,7 @@ urlpatterns = [
     path("mentoring/", MentorListView.as_view(), name="mentors"),
     path("pricing/", subscriptions_views.PricingView.as_view(), name="pricing"),
     path(
-        "pricing/change/<int:plan_id>/", # pricing/<int:plan_id>/change
+        "pricing/change/<int:plan_id>/",  # pricing/<int:plan_id>/change
         subscriptions_views.change_plan,
         name="change-plan",
     ),

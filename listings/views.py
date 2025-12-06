@@ -9,8 +9,6 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 
-from core.mixins import CapabilityRequiredMixin
-
 from .forms import AvailabilityForm, BookingForm, ListingCreationForm
 from .models import Availability, Booking, Listing
 
@@ -52,7 +50,7 @@ class MentorListView(ListView):
     context_object_name = "listings"
     paginate_by = 9  # <- pagination
 
-    def get_queryset(self): # django-filter
+    def get_queryset(self):  # django-filter
         qs = (
             super()
             .get_queryset()
@@ -88,14 +86,16 @@ class CreateTutorListingView(LoginRequiredMixin, CreateView):
         from django.shortcuts import redirect
 
         if not request.user.can_post_tutor:
-            messages.error(request, "You need to be a Tutor or higher to create tutor listings.")
+            messages.error(
+                request, "You need to be a Tutor or higher to create tutor listings."
+            )
             return redirect("pricing")
 
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['listing_type'] = 'tutor'
+        context["listing_type"] = "tutor"
         return context
 
     def form_valid(self, form):
@@ -115,14 +115,16 @@ class CreateMentorListingView(LoginRequiredMixin, CreateView):
         from django.shortcuts import redirect
 
         if not request.user.can_post_mentor:
-            messages.error(request, "You need to be a Mentor to create mentor listings.")
+            messages.error(
+                request, "You need to be a Mentor to create mentor listings."
+            )
             return redirect("pricing")
 
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['listing_type'] = 'mentor'
+        context["listing_type"] = "mentor"
         return context
 
     def form_valid(self, form):
@@ -141,7 +143,9 @@ class ListingDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["availabilities"] = self.object.user.availabilities.filter(is_active=True)
+        context["availabilities"] = self.object.user.availabilities.filter(
+            is_active=True
+        )
         context["booking_form"] = BookingForm()
         return context
 
@@ -224,9 +228,7 @@ class MyBookingsView(LoginRequiredMixin, ListView):
 
 class UpdateBookingStatusView(LoginRequiredMixin, View):
     def post(self, request, booking_id, status):
-        booking = get_object_or_404(
-            Booking, pk=booking_id, listing__user=request.user
-        )
+        booking = get_object_or_404(Booking, pk=booking_id, listing__user=request.user)
         if status in dict(Booking.Status.choices):
             booking.status = status
             booking.save()
@@ -252,7 +254,9 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["listing"] = self.get_listing()
-        context["availabilities"] = self.get_listing().user.availabilities.filter(is_active=True)
+        context["availabilities"] = self.get_listing().user.availabilities.filter(
+            is_active=True
+        )
         return context
 
     def form_valid(self, form):
@@ -270,7 +274,7 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
         conflicting_bookings = Booking.objects.filter(
             listing=self.get_listing(),
             date=booking_date,
-            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
         )
 
         for booking in conflicting_bookings:
@@ -279,10 +283,10 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
             new_start = datetime.combine(booking_date, start_time)
             new_end = datetime.combine(booking_date, form.instance.end_time)
 
-            if (new_start < booking_end and new_end > booking_start):
+            if new_start < booking_end and new_end > booking_start:
                 messages.error(
                     self.request,
-                    "This time slot conflicts with an existing booking. Please choose a different time."
+                    "This time slot conflicts with an existing booking. Please choose a different time.",
                 )
                 return self.form_invalid(form)
 
@@ -327,7 +331,7 @@ def get_available_slots(request, listing_id):
     existing_bookings = Booking.objects.filter(
         listing=listing,
         date=selected_date,
-        status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+        status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
     ).values_list("start_time", "end_time")
 
     all_slots = []
@@ -350,11 +354,12 @@ def get_available_slots(request, listing_id):
             if is_available:
                 hour = current_time.hour
                 minute = current_time.minute
-                display = f"{hour % 12 or 12}:{minute:02d} {'AM' if hour < 12 else 'PM'}"
-                all_slots.append({
-                    "value": time_value.strftime("%H:%M"),
-                    "display": display
-                })
+                display = (
+                    f"{hour % 12 or 12}:{minute:02d} {'AM' if hour < 12 else 'PM'}"
+                )
+                all_slots.append(
+                    {"value": time_value.strftime("%H:%M"), "display": display}
+                )
 
             current_time += timedelta(minutes=15)
 
