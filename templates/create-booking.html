@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags static %}
 {% block content %}
     <main class="main">
         <div class="page-title" data-aos="fade">
@@ -38,6 +38,7 @@
                             </div>
                             <form method="post">
                                 {% csrf_token %}
+                                <input type="hidden" id="listing-id" value="{{ listing.id }}">
                                 {{ form|crispy }}
                                 <button type="submit" class="btn btn-primary">Submit Booking Request</button>
                                 <a href="{% url 'listing-detail' listing.id %}" class="btn btn-secondary">Cancel</a>
@@ -48,4 +49,8 @@
             </div>
         </section>
     </main>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/booking.js' %}"></script>
 {% endblock %}

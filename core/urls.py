@@ -27,6 +27,7 @@ from listings.views import (
     MyBookingsView,
     StudentBookingsView,
     UpdateBookingStatusView,
+    get_available_slots,
 )
 from subscriptions import views as subscriptions_views
 
@@ -72,6 +73,11 @@ urlpatterns = [
         "listings/<int:listing_id>/book/",
         CreateBookingView.as_view(),
         name="create-booking",
+    ),
+    path(
+        "listings/<int:listing_id>/available-slots/",
+        get_available_slots,
+        name="available-slots",
     ),
     path("my-lessons/", StudentBookingsView.as_view(), name="student-bookings"),
     path(

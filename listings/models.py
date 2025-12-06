@@ -47,8 +47,8 @@ class Availability(models.Model):
         SATURDAY = 5, "Saturday"
         SUNDAY = 6, "Sunday"
 
-    listing = models.ForeignKey(
-        Listing, on_delete=models.CASCADE, related_name="availabilities"
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="availabilities"
     )
     day_of_week = models.IntegerField(choices=DayOfWeek.choices)
     start_time = models.TimeField()
@@ -60,7 +60,7 @@ class Availability(models.Model):
         verbose_name_plural = "Availabilities"
 
     def __str__(self):
-        return f"{self.listing.user.username} - {self.get_day_of_week_display()} {self.start_time}-{self.end_time}"
+        return f"{self.user.username} - {self.get_day_of_week_display()} {self.start_time}-{self.end_time}"
 
 
 class Booking(models.Model):

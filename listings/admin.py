@@ -12,9 +12,9 @@ class ListingAdmin(admin.ModelAdmin):
 
 @admin.register(Availability)
 class AvailabilityAdmin(admin.ModelAdmin):
-    list_display = ("id", "listing", "day_of_week", "start_time", "end_time", "is_active")
+    list_display = ("id", "user", "day_of_week", "start_time", "end_time", "is_active")
     list_filter = ("day_of_week", "is_active")
-    search_fields = ("listing__title",)
+    search_fields = ("user__username",)
 
 
 @admin.register(Booking)

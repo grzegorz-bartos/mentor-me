@@ -1,6 +1,9 @@
+from datetime import datetime, timedelta
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -138,7 +141,7 @@ class ListingDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["availabilities"] = self.object.availabilities.filter(is_active=True)
+        context["availabilities"] = self.object.user.availabilities.filter(is_active=True)
         context["booking_form"] = BookingForm()
         return context
 
@@ -165,7 +168,7 @@ class ManageAvailabilityView(LoginRequiredMixin, ListView):
         self.listing = get_object_or_404(
             Listing, pk=self.kwargs["listing_id"], user=self.request.user
         )
-        return self.listing.availabilities.filter(is_active=True)
+        return self.request.user.availabilities.filter(is_active=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -180,7 +183,7 @@ class ManageAvailabilityView(LoginRequiredMixin, ListView):
         form = AvailabilityForm(request.POST)
         if form.is_valid():
             availability = form.save(commit=False)
-            availability.listing = self.listing
+            availability.user = request.user
             availability.save()
             messages.success(request, "Availability added successfully.")
             return redirect("manage-availability", listing_id=self.listing.id)
@@ -195,10 +198,13 @@ class DeleteAvailabilityView(LoginRequiredMixin, DeleteView):
     model = Availability
 
     def get_queryset(self):
-        return super().get_queryset().filter(listing__user=self.request.user)
+        return super().get_queryset().filter(user=self.request.user)
 
     def get_success_url(self):
-        return reverse("manage-availability", kwargs={"listing_id": self.object.listing.id})
+        listing = self.request.user.listings.first()
+        if listing:
+            return reverse("manage-availability", kwargs={"listing_id": listing.id})
+        return reverse("profile")
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, "Availability deleted successfully.")
@@ -246,21 +252,39 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["listing"] = self.get_listing()
-        context["availabilities"] = self.get_listing().availabilities.filter(is_active=True)
+        context["availabilities"] = self.get_listing().user.availabilities.filter(is_active=True)
         return context
 
     def form_valid(self, form):
-        from datetime import datetime, timedelta
-
         form.instance.listing = self.get_listing()
         form.instance.student = self.request.user
 
         start_time = form.cleaned_data["start_time"]
         duration_hours = form.cleaned_data["duration_hours"]
+        booking_date = form.cleaned_data["date"]
 
         start_dt = datetime.combine(datetime.today(), start_time)
         end_dt = start_dt + timedelta(hours=duration_hours)
         form.instance.end_time = end_dt.time()
+
+        conflicting_bookings = Booking.objects.filter(
+            listing=self.get_listing(),
+            date=booking_date,
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+        )
+
+        for booking in conflicting_bookings:
+            booking_start = datetime.combine(booking_date, booking.start_time)
+            booking_end = datetime.combine(booking_date, booking.end_time)
+            new_start = datetime.combine(booking_date, start_time)
+            new_end = datetime.combine(booking_date, form.instance.end_time)
+
+            if (new_start < booking_end and new_end > booking_start):
+                messages.error(
+                    self.request,
+                    "This time slot conflicts with an existing booking. Please choose a different time."
+                )
+                return self.form_invalid(form)
 
         messages.success(self.request, "Booking request submitted successfully!")
         return super().form_valid(form)
@@ -278,3 +302,60 @@ class StudentBookingsView(LoginRequiredMixin, ListView):
         return Booking.objects.filter(student=self.request.user).select_related(
             "listing", "listing__user"
         )
+
+
+def get_available_slots(request, listing_id):
+    date_str = request.GET.get("date")
+    if not date_str:
+        return JsonResponse({"slots": []})
+
+    try:
+        selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"slots": []})
+
+    listing = get_object_or_404(Listing, pk=listing_id)
+    day_of_week = selected_date.weekday()
+
+    availabilities = listing.user.availabilities.filter(
+        day_of_week=day_of_week, is_active=True
+    )
+
+    if not availabilities.exists():
+        return JsonResponse({"slots": []})
+
+    existing_bookings = Booking.objects.filter(
+        listing=listing,
+        date=selected_date,
+        status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED]
+    ).values_list("start_time", "end_time")
+
+    all_slots = []
+    for availability in availabilities:
+        current_time = datetime.combine(selected_date, availability.start_time)
+        end_time = datetime.combine(selected_date, availability.end_time)
+
+        while current_time < end_time:
+            time_value = current_time.time()
+            is_available = True
+
+            for booking_start, booking_end in existing_bookings:
+                booking_start_dt = datetime.combine(selected_date, booking_start)
+                booking_end_dt = datetime.combine(selected_date, booking_end)
+
+                if booking_start_dt <= current_time < booking_end_dt:
+                    is_available = False
+                    break
+
+            if is_available:
+                hour = current_time.hour
+                minute = current_time.minute
+                display = f"{hour % 12 or 12}:{minute:02d} {'AM' if hour < 12 else 'PM'}"
+                all_slots.append({
+                    "value": time_value.strftime("%H:%M"),
+                    "display": display
+                })
+
+            current_time += timedelta(minutes=15)
+
+    return JsonResponse({"slots": all_slots})
