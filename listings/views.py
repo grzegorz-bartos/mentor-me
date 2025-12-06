@@ -85,7 +85,7 @@ class CreateTutorListingView(LoginRequiredMixin, CreateView):
         from django.contrib import messages
         from django.shortcuts import redirect
 
-        if not request.user.can_post_tutor:
+        if request.user.is_authenticated and not request.user.can_post_tutor:
             messages.error(
                 request, "You need to be a Tutor or higher to create tutor listings."
             )
@@ -114,7 +114,7 @@ class CreateMentorListingView(LoginRequiredMixin, CreateView):
         from django.contrib import messages
         from django.shortcuts import redirect
 
-        if not request.user.can_post_mentor:
+        if request.user.is_authenticated and not request.user.can_post_mentor:
             messages.error(
                 request, "You need to be a Mentor to create mentor listings."
             )

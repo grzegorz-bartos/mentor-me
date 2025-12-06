@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import FormView, TemplateView
+
 from home.forms import ContactForm
 from jobs.models import Job
 from listings.models import Listing
@@ -12,7 +13,6 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["listings"] = Listing.objects.order_by("id")[:3]
         context["listings"] = Listing.objects.select_related("user").order_by("id")[:3]
 
         context["total_students"] = Account.objects.filter(
@@ -34,7 +34,6 @@ class AboutView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["listings"] = Listing.objects.order_by("id")[:3]
         context["listings"] = Listing.objects.select_related("user").order_by("id")[:3]
 
         context["total_students"] = Account.objects.filter(
