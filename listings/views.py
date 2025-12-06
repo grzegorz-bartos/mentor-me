@@ -2,77 +2,50 @@ from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
+from django_filters.views import FilterView
 
+from .filters import ListingFilter
 from .forms import AvailabilityForm, BookingForm, ListingCreationForm
 from .models import Availability, Booking, Listing
 
 
-class ListingListView(ListView):
+class ListingListView(FilterView):
     template_name = "listings.html"
     model = Listing
     context_object_name = "listings"
-    paginate_by = 9  # <- pagination
+    paginate_by = 9
+    filterset_class = ListingFilter
 
     def get_queryset(self):
-        qs = (
+        return (
             super()
             .get_queryset()
             .select_related("user")
             .filter(type=Listing.ListingType.TUTOR, is_active=True)
             .order_by("-created_at")
         )
-        q = self.request.GET.get("q")
-        min_price = self.request.GET.get("min")
-        max_price = self.request.GET.get("max")
-        if q:
-            qs = qs.filter(
-                Q(title__icontains=q)
-                | Q(description__icontains=q)
-                | Q(subject__icontains=q)
-                | Q(category__icontains=q)
-            )
-        if min_price:
-            qs = qs.filter(price__gte=min_price)
-        if max_price:
-            qs = qs.filter(price__lte=max_price)
-        return qs
 
 
-class MentorListView(ListView):
+class MentorListView(FilterView):
     template_name = "mentor-list.html"
     model = Listing
     context_object_name = "listings"
-    paginate_by = 9  # <- pagination
+    paginate_by = 9
+    filterset_class = ListingFilter
 
-    def get_queryset(self):  # django-filter
-        qs = (
+    def get_queryset(self):
+        return (
             super()
             .get_queryset()
             .select_related("user")
             .filter(type=Listing.ListingType.MENTOR, is_active=True)
             .order_by("-created_at")
         )
-        q = self.request.GET.get("q")
-        min_price = self.request.GET.get("min")
-        max_price = self.request.GET.get("max")
-        if q:
-            qs = qs.filter(
-                Q(title__icontains=q)
-                | Q(description__icontains=q)
-                | Q(subject__icontains=q)
-                | Q(category__icontains=q)
-            )
-        if min_price:
-            qs = qs.filter(price__gte=min_price)
-        if max_price:
-            qs = qs.filter(price__lte=max_price)
-        return qs
 
 
 class CreateTutorListingView(LoginRequiredMixin, CreateView):

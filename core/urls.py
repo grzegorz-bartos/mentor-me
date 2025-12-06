@@ -6,13 +6,13 @@ from django.urls import include, path
 
 from home import views as home_views
 from jobs.views import (
+    AcceptOfferView,
     JobCreateView,
     JobDeleteView,
     JobDetailView,
     JobListView,
-    accept_offer,
-    submit_offer,
-    take_job,
+    SubmitOfferView,
+    TakeJobView,
 )
 from listings.views import (
     CreateBookingView,
@@ -29,7 +29,7 @@ from listings.views import (
     UpdateBookingStatusView,
     get_available_slots,
 )
-from subscriptions import views as subscriptions_views
+from subscriptions.views import ChangePlanView, PricingView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -90,18 +90,18 @@ urlpatterns = [
     path("jobs/create/", JobCreateView.as_view(), name="job-create"),
     path("jobs/<int:pk>/", JobDetailView.as_view(), name="job-detail"),
     path("jobs/<int:pk>/delete/", JobDeleteView.as_view(), name="job-delete"),
-    path("jobs/<int:pk>/take/", take_job, name="job-take"),
-    path("jobs/<int:pk>/offer/", submit_offer, name="job-offer"),
+    path("jobs/<int:pk>/take/", TakeJobView.as_view(), name="job-take"),
+    path("jobs/<int:pk>/offer/", SubmitOfferView.as_view(), name="job-offer"),
     path(
         "jobs/<int:job_id>/accept/<int:proposal_id>/",
-        accept_offer,
+        AcceptOfferView.as_view(),
         name="job-accept-offer",
     ),
     path("mentoring/", MentorListView.as_view(), name="mentors"),
-    path("pricing/", subscriptions_views.PricingView.as_view(), name="pricing"),
+    path("pricing/", PricingView.as_view(), name="pricing"),
     path(
-        "pricing/change/<int:plan_id>/",  # pricing/<int:plan_id>/change
-        subscriptions_views.change_plan,
+        "pricing/change/<int:plan_id>/",
+        ChangePlanView.as_view(),
         name="change-plan",
     ),
 ]
