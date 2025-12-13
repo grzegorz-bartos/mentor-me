@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const hiddenDateInput = document.getElementById('selected-date');
     const hiddenTimeInput = document.getElementById('selected-time');
     const submitButton = document.getElementById('submit-booking');
+    const timeLabel = document.getElementById('time-label');
     const listingId = document.getElementById('listing-id').value;
 
     initializeTimeSlots();
@@ -27,6 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
             hiddenTimeInput.value = '';
             submitButton.disabled = true;
 
+            timeLabel.textContent = 'Select Time';
+
             fetchAvailableSlots(selectedDate);
         });
     });
@@ -37,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let hour = 6; hour < 23; hour++) {
             const timeButton = document.createElement('button');
             timeButton.type = 'button';
-            timeButton.className = 'time-slot-btn';
+            timeButton.className = 'time-slot-btn booked';
             timeButton.disabled = true;
 
             const displayHour = hour % 12 || 12;
