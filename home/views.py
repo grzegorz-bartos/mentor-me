@@ -1,8 +1,10 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import FormView, TemplateView
+from django.views.generic import CreateView, FormView, TemplateView
 
-from home.forms import ContactForm
+from home.forms import ContactForm, ReviewForm
+from home.models import Review
 from jobs.models import Job
 from listings.models import Listing
 from users.models import Account
@@ -47,6 +49,11 @@ class AboutView(TemplateView):
         ).count()
         context["open_jobs"] = Job.objects.filter(status=Job.Status.OPEN).count()
 
+        context["reviews"] = Review.objects.filter(is_approved=True).select_related(
+            "user"
+        )
+        context["review_form"] = ReviewForm()
+
         return context
 
 
@@ -56,17 +63,24 @@ class ContactView(FormView):
     success_url = reverse_lazy("contact")
 
     def form_valid(self, form):
-        # Extract form data
         name = form.cleaned_data["name"]
         email = form.cleaned_data["email"]
-        subject = form.cleaned_data["subject"]
-        message = form.cleaned_data["message"]
 
-        # TODO: Send email or save to database
-        # For now, just display a success message
         messages.success(
             self.request,
             f"Thank you for contacting us, {name}! We'll get back to you at {email} soon.",
         )
 
+        return super().form_valid(form)
+
+
+class CreateReviewView(LoginRequiredMixin, CreateView):
+    model = Review
+    form_class = ReviewForm
+    success_url = reverse_lazy("about")
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        form.instance.role_at_time = self.request.user.role_level
+        messages.success(self.request, "Thank you for sharing your opinion!")
         return super().form_valid(form)

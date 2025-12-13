@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from home import views as home_views
+from home.views import AboutView, ContactView, CreateReviewView, HomeView
 from jobs.views import (
     AcceptOfferView,
     JobCreateView,
@@ -33,9 +33,10 @@ from subscriptions.views import ChangePlanView, PricingView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", home_views.HomeView.as_view(), name="home"),
-    path("about/", home_views.AboutView.as_view(), name="about"),
-    path("contact/", home_views.ContactView.as_view(), name="contact"),
+    path("", HomeView.as_view(), name="home"),
+    path("about/", AboutView.as_view(), name="about"),
+    path("about/review/", CreateReviewView.as_view(), name="create-review"),
+    path("contact/", ContactView.as_view(), name="contact"),
     path("accounts/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("listings/", ListingListView.as_view(), name="listings"),
