@@ -59,21 +59,18 @@
                                 {% csrf_token %}
                                 <input type="hidden" id="listing-id" value="{{ listing.id }}">
                                 <input type="hidden" name="date" id="selected-date">
+                                <input type="hidden" name="start_time" id="selected-time">
                                 <div class="mb-3">
-                                    <label for="id_start_time" class="form-label">Start Time</label>
-                                    <select name="start_time"
-                                            id="id_start_time"
-                                            class="form-select"
-                                            disabled
-                                            required>
-                                        <option value="">Select a date first</option>
-                                    </select>
+                                    <label class="form-label">Select Time</label>
+                                    <div id="time-slots-container" class="time-slots-grid">
+                                        <div class="text-muted small">Select a date first</div>
+                                    </div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="id_notes" class="form-label">Notes (optional)</label>
                                     <textarea name="notes" id="id_notes" class="form-control" rows="3"></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-primary">Book Session</button>
+                                <button type="submit" class="btn btn-primary" id="submit-booking" disabled>Book Session</button>
                                 <a href="{% url 'listing-detail' listing.id %}"
                                    class="btn btn-secondary">Cancel</a>
                             </form>

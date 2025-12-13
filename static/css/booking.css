@@ -110,9 +110,76 @@
     color: #169976;
 }
 
+/* Time Slots Grid */
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    min-height: 50px;
+}
+
+.time-slot-btn {
+    padding: 12px 16px;
+    border: 2px solid #ddd;
+    background-color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.time-slot-btn:hover {
+    border-color: #169976;
+    background-color: #f0f9f7;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.time-slot-btn.selected {
+    background-color: #169976;
+    border-color: #169976;
+    color: white;
+    font-weight: 600;
+}
+
+.time-slot-btn.selected:hover {
+    background-color: #127d5f;
+    border-color: #127d5f;
+}
+
+.time-slot-btn.booked {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.time-slot-btn.booked:hover {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    transform: none;
+    box-shadow: none;
+}
+
 /* Responsive adjustments */
 @media (max-width: 991px) {
     .calendar-widget {
         margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .time-slots-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 8px;
+    }
+
+    .time-slot-btn {
+        padding: 10px 12px;
+        font-size: 0.875rem;
     }
 }

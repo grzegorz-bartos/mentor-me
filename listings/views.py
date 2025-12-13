@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
+from types import SimpleNamespace
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -254,15 +255,11 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
 
     def _count_available_slots(self, listing, check_date):
         """Count available time slots for a given date"""
-        from datetime import time, timedelta
-        from types import SimpleNamespace
-
         day_of_week = check_date.weekday()
         availabilities = listing.user.availabilities.filter(
             day_of_week=day_of_week, is_active=True
         )
 
-        # Default to 6am-11pm if no specific availability
         if not availabilities.exists():
             default_availability = SimpleNamespace(
                 start_time=time(6, 0), end_time=time(23, 0)
@@ -352,8 +349,6 @@ class StudentBookingsView(LoginRequiredMixin, ListView):
 
 
 def get_available_slots(request, listing_id):
-    from datetime import time
-
     date_str = request.GET.get("date")
     if not date_str:
         return JsonResponse({"slots": []})
@@ -370,11 +365,7 @@ def get_available_slots(request, listing_id):
         day_of_week=day_of_week, is_active=True
     )
 
-    # Default to 24/7 availability if no specific availability records exist
     if not availabilities.exists():
-        # Create a default availability object (not saved to DB) for 6am-11pm
-        from types import SimpleNamespace
-
         default_availability = SimpleNamespace(
             start_time=time(6, 0), end_time=time(23, 0)
         )
@@ -395,27 +386,27 @@ def get_available_slots(request, listing_id):
             time_value = current_time.time()
             is_available = True
 
-            # Check if this 1-hour slot conflicts with existing bookings
             slot_end = current_time + timedelta(hours=1)
 
             for booking_start, booking_end in existing_bookings:
                 booking_start_dt = datetime.combine(selected_date, booking_start)
                 booking_end_dt = datetime.combine(selected_date, booking_end)
 
-                # Interval overlap check: slot_start < booking_end AND slot_end > booking_start
                 if current_time < booking_end_dt and slot_end > booking_start_dt:
                     is_available = False
                     break
 
-            if is_available:
-                hour = current_time.hour
-                minute = current_time.minute
-                display = (
-                    f"{hour % 12 or 12}:{minute:02d} {'AM' if hour < 12 else 'PM'}"
-                )
-                all_slots.append(
-                    {"value": time_value.strftime("%H:%M"), "display": display}
-                )
+            hour = current_time.hour
+            minute = current_time.minute
+            display = f"{hour % 12 or 12}:{minute:02d} {'AM' if hour < 12 else 'PM'}"
+
+            all_slots.append(
+                {
+                    "value": time_value.strftime("%H:%M"),
+                    "display": display,
+                    "is_available": is_available,
+                }
+            )
 
             current_time += timedelta(hours=1)
 

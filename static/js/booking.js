@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const startTimeSelect = document.getElementById('id_start_time');
+    const timeSlotsContainer = document.getElementById('time-slots-container');
     const hiddenDateInput = document.getElementById('selected-date');
+    const hiddenTimeInput = document.getElementById('selected-time');
+    const submitButton = document.getElementById('submit-booking');
     const listingId = document.getElementById('listing-id').value;
 
     // Calendar day click handler
@@ -24,44 +26,53 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedDate = this.dataset.date;
             hiddenDateInput.value = selectedDate;
 
+            // Clear time selection
+            hiddenTimeInput.value = '';
+            submitButton.disabled = true;
+
             // Fetch available slots
             fetchAvailableSlots(selectedDate);
         });
     });
 
     function fetchAvailableSlots(date) {
-        startTimeSelect.innerHTML = '<option value="">Loading...</option>';
-        startTimeSelect.disabled = true;
+        timeSlotsContainer.innerHTML = '<div class="text-muted small">Loading...</div>';
 
         fetch(`/listings/${listingId}/available-slots/?date=${date}`)
             .then(response => response.json())
             .then(data => {
-                startTimeSelect.innerHTML = '';
+                timeSlotsContainer.innerHTML = '';
 
                 if (data.slots && data.slots.length > 0) {
-                    const placeholder = document.createElement('option');
-                    placeholder.value = '';
-                    placeholder.textContent = 'Select a time';
-                    startTimeSelect.appendChild(placeholder);
-
                     data.slots.forEach(slot => {
-                        const option = document.createElement('option');
-                        option.value = slot.value;
-                        option.textContent = slot.display;
-                        startTimeSelect.appendChild(option);
-                    });
+                        const timeButton = document.createElement('button');
+                        timeButton.type = 'button';
+                        timeButton.className = slot.is_available ? 'time-slot-btn' : 'time-slot-btn booked';
+                        timeButton.textContent = slot.display;
+                        timeButton.dataset.value = slot.value;
+                        timeButton.disabled = !slot.is_available;
 
-                    startTimeSelect.disabled = false;
+                        if (slot.is_available) {
+                            timeButton.addEventListener('click', function() {
+                                document.querySelectorAll('.time-slot-btn').forEach(btn => {
+                                    btn.classList.remove('selected');
+                                });
+
+                                this.classList.add('selected');
+                                hiddenTimeInput.value = this.dataset.value;
+                                submitButton.disabled = false;
+                            });
+                        }
+
+                        timeSlotsContainer.appendChild(timeButton);
+                    });
                 } else {
-                    const noSlots = document.createElement('option');
-                    noSlots.value = '';
-                    noSlots.textContent = 'No available time slots for this day';
-                    startTimeSelect.appendChild(noSlots);
+                    timeSlotsContainer.innerHTML = '<div class="text-muted small">No time slots available</div>';
                 }
             })
             .catch(error => {
                 console.error('Error fetching time slots:', error);
-                startTimeSelect.innerHTML = '<option value="">Error loading slots</option>';
+                timeSlotsContainer.innerHTML = '<div class="text-danger small">Error loading slots</div>';
             });
     }
 });
