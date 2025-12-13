@@ -6,8 +6,18 @@ from django import template
 register = template.Library()
 
 
+@register.filter
+def get_item(dictionary, key):
+    """Get an item from a dictionary by key"""
+    if dictionary is None:
+        return 0
+    return dictionary.get(key, 0)
+
+
 @register.inclusion_tag("calendar_widget.html")
-def render_calendar(year=None, month=None, tutor_availabilities=None):
+def render_calendar(
+    year=None, month=None, tutor_availabilities=None, availability_counts=None
+):
     """
     Generates calendar data for a specific month.
 
@@ -15,6 +25,7 @@ def render_calendar(year=None, month=None, tutor_availabilities=None):
     - month_name: "December 2025"
     - weeks: [[day1, day2, ...], [day8, day9, ...]]
     - available_days: set of day_of_week values (0-6) from availabilities
+    - availability_counts: dict of day -> slot count
     """
     if not year or not month:
         today = date.today()
@@ -38,6 +49,7 @@ def render_calendar(year=None, month=None, tutor_availabilities=None):
         "month_name": f"{calendar.month_name[month]} {year}",
         "weeks": month_days,
         "available_days": available_days,
+        "availability_counts": availability_counts or {},
         "today": date.today(),
         "current_month": month,
     }

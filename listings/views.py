@@ -225,18 +225,79 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
         return kwargs
 
     def get_context_data(self, **kwargs):
+        import calendar
         from datetime import date
 
         context = super().get_context_data(**kwargs)
-        context["listing"] = self.get_listing()
-        context["availabilities"] = self.get_listing().user.availabilities.filter(
-            is_active=True
-        )
+        listing = self.get_listing()
+        context["listing"] = listing
+        context["availabilities"] = listing.user.availabilities.filter(is_active=True)
+
         # Add current year and month for calendar
         today = date.today()
-        context["current_year"] = today.year
-        context["current_month"] = today.month
+        year, month = today.year, today.month
+        context["current_year"] = year
+        context["current_month"] = month
+
+        # Calculate availability counts for each day in the month
+        availability_counts = {}
+        _, num_days = calendar.monthrange(year, month)
+
+        for day in range(1, num_days + 1):
+            check_date = date(year, month, day)
+            if check_date >= today:  # Only check future dates
+                slot_count = self._count_available_slots(listing, check_date)
+                availability_counts[day] = slot_count
+
+        context["availability_counts"] = availability_counts
         return context
+
+    def _count_available_slots(self, listing, check_date):
+        """Count available time slots for a given date"""
+        from datetime import time, timedelta
+        from types import SimpleNamespace
+
+        day_of_week = check_date.weekday()
+        availabilities = listing.user.availabilities.filter(
+            day_of_week=day_of_week, is_active=True
+        )
+
+        # Default to 6am-11pm if no specific availability
+        if not availabilities.exists():
+            default_availability = SimpleNamespace(
+                start_time=time(6, 0), end_time=time(23, 0)
+            )
+            availabilities = [default_availability]
+
+        existing_bookings = Booking.objects.filter(
+            listing=listing,
+            date=check_date,
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
+        ).values_list("start_time", "end_time")
+
+        slot_count = 0
+        for availability in availabilities:
+            current_time = datetime.combine(check_date, availability.start_time)
+            end_time = datetime.combine(check_date, availability.end_time)
+
+            while current_time < end_time:
+                is_available = True
+                slot_end = current_time + timedelta(hours=1)
+
+                for booking_start, booking_end in existing_bookings:
+                    booking_start_dt = datetime.combine(check_date, booking_start)
+                    booking_end_dt = datetime.combine(check_date, booking_end)
+
+                    if current_time < booking_end_dt and slot_end > booking_start_dt:
+                        is_available = False
+                        break
+
+                if is_available:
+                    slot_count += 1
+
+                current_time += timedelta(hours=1)
+
+        return slot_count
 
     def form_valid(self, form):
         form.instance.listing = self.get_listing()

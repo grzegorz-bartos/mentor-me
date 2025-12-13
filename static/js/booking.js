@@ -6,8 +6,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Calendar day click handler
     document.querySelectorAll('.calendar-day').forEach(day => {
         day.addEventListener('click', function() {
-            // Ignore past dates and other-month dates
-            if (this.classList.contains('past') || this.classList.contains('other-month')) {
+            // Ignore past dates, other-month dates, and unavailable dates
+            if (this.classList.contains('past') ||
+                this.classList.contains('other-month') ||
+                this.classList.contains('unavailable')) {
                 return;
             }
 
