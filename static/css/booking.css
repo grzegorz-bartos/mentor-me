@@ -1,0 +1,94 @@
+/* Calendar Widget Styling */
+.calendar-widget {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    padding: 0.5rem 0;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #666;
+    border-bottom: 1px solid #eee;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    min-height: 40px;
+}
+
+.calendar-day:hover:not(.past):not(.other-month) {
+    background-color: #f0f0f0;
+}
+
+.calendar-day.has-availability {
+    background-color: #e8f5e9;
+    font-weight: 500;
+}
+
+.calendar-day.has-availability:hover:not(.past):not(.other-month) {
+    background-color: #c8e6c9;
+}
+
+.calendar-day.selected {
+    background-color: #169976 !important;
+    color: white;
+    font-weight: 600;
+}
+
+.calendar-day.today {
+    border: 2px solid #169976;
+}
+
+.calendar-day.past {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.calendar-day.other-month {
+    color: #ddd;
+    cursor: default;
+}
+
+/* Booking Panel */
+.booking-panel {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.booking-panel h5 {
+    margin-bottom: 1.5rem;
+    color: #169976;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .calendar-widget {
+        margin-bottom: 2rem;
+    }
+}

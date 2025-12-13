@@ -225,11 +225,17 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
         return kwargs
 
     def get_context_data(self, **kwargs):
+        from datetime import date
+
         context = super().get_context_data(**kwargs)
         context["listing"] = self.get_listing()
         context["availabilities"] = self.get_listing().user.availabilities.filter(
             is_active=True
         )
+        # Add current year and month for calendar
+        today = date.today()
+        context["current_year"] = today.year
+        context["current_month"] = today.month
         return context
 
     def form_valid(self, form):
@@ -237,8 +243,11 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
         form.instance.student = self.request.user
 
         start_time = form.cleaned_data["start_time"]
-        duration_hours = form.cleaned_data["duration_hours"]
         booking_date = form.cleaned_data["date"]
+
+        # All bookings are fixed 1-hour sessions
+        duration_hours = 1
+        form.instance.duration_hours = duration_hours
 
         start_dt = datetime.combine(datetime.today(), start_time)
         end_dt = start_dt + timedelta(hours=duration_hours)
@@ -282,6 +291,8 @@ class StudentBookingsView(LoginRequiredMixin, ListView):
 
 
 def get_available_slots(request, listing_id):
+    from datetime import time
+
     date_str = request.GET.get("date")
     if not date_str:
         return JsonResponse({"slots": []})
@@ -298,8 +309,15 @@ def get_available_slots(request, listing_id):
         day_of_week=day_of_week, is_active=True
     )
 
+    # Default to 24/7 availability if no specific availability records exist
     if not availabilities.exists():
-        return JsonResponse({"slots": []})
+        # Create a default availability object (not saved to DB) for 6am-11pm
+        from types import SimpleNamespace
+
+        default_availability = SimpleNamespace(
+            start_time=time(6, 0), end_time=time(23, 0)
+        )
+        availabilities = [default_availability]
 
     existing_bookings = Booking.objects.filter(
         listing=listing,
@@ -316,11 +334,15 @@ def get_available_slots(request, listing_id):
             time_value = current_time.time()
             is_available = True
 
+            # Check if this 1-hour slot conflicts with existing bookings
+            slot_end = current_time + timedelta(hours=1)
+
             for booking_start, booking_end in existing_bookings:
                 booking_start_dt = datetime.combine(selected_date, booking_start)
                 booking_end_dt = datetime.combine(selected_date, booking_end)
 
-                if booking_start_dt <= current_time < booking_end_dt:
+                # Interval overlap check: slot_start < booking_end AND slot_end > booking_start
+                if current_time < booking_end_dt and slot_end > booking_start_dt:
                     is_available = False
                     break
 
@@ -334,6 +356,6 @@ def get_available_slots(request, listing_id):
                     {"value": time_value.strftime("%H:%M"), "display": display}
                 )
 
-            current_time += timedelta(minutes=15)
+            current_time += timedelta(hours=1)
 
     return JsonResponse({"slots": all_slots})

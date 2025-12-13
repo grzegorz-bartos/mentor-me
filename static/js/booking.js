@@ -1,28 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('id_date');
     const startTimeSelect = document.getElementById('id_start_time');
-    const durationSelect = document.getElementById('id_duration_hours');
+    const hiddenDateInput = document.getElementById('selected-date');
     const listingId = document.getElementById('listing-id').value;
 
-    startTimeSelect.disabled = true;
-    durationSelect.disabled = true;
+    // Calendar day click handler
+    document.querySelectorAll('.calendar-day').forEach(day => {
+        day.addEventListener('click', function() {
+            // Ignore past dates and other-month dates
+            if (this.classList.contains('past') || this.classList.contains('other-month')) {
+                return;
+            }
 
-    const originalTimeOption = startTimeSelect.querySelector('option');
-    const originalDurationOption = durationSelect.querySelector('option');
+            // Remove previous selection
+            const previouslySelected = document.querySelector('.calendar-day.selected');
+            if (previouslySelected) {
+                previouslySelected.classList.remove('selected');
+            }
 
-    dateInput.addEventListener('change', function() {
-        const selectedDate = this.value;
+            // Mark as selected
+            this.classList.add('selected');
+            const selectedDate = this.dataset.date;
+            hiddenDateInput.value = selectedDate;
 
-        if (!selectedDate) {
-            startTimeSelect.disabled = true;
-            durationSelect.disabled = true;
-            return;
-        }
+            // Fetch available slots
+            fetchAvailableSlots(selectedDate);
+        });
+    });
 
+    function fetchAvailableSlots(date) {
         startTimeSelect.innerHTML = '<option value="">Loading...</option>';
         startTimeSelect.disabled = true;
 
-        fetch(`/listings/${listingId}/available-slots/?date=${selectedDate}`)
+        fetch(`/listings/${listingId}/available-slots/?date=${date}`)
             .then(response => response.json())
             .then(data => {
                 startTimeSelect.innerHTML = '';
@@ -30,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.slots && data.slots.length > 0) {
                     const placeholder = document.createElement('option');
                     placeholder.value = '';
-                    placeholder.textContent = '---------';
+                    placeholder.textContent = 'Select a time';
                     startTimeSelect.appendChild(placeholder);
 
                     data.slots.forEach(slot => {
@@ -41,11 +50,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     startTimeSelect.disabled = false;
-                    durationSelect.disabled = false;
                 } else {
                     const noSlots = document.createElement('option');
                     noSlots.value = '';
-                    noSlots.textContent = 'No available time slots';
+                    noSlots.textContent = 'No available time slots for this day';
                     startTimeSelect.appendChild(noSlots);
                 }
             })
@@ -53,5 +61,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error fetching time slots:', error);
                 startTimeSelect.innerHTML = '<option value="">Error loading slots</option>';
             });
-    });
+    }
 });

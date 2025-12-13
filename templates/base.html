@@ -29,6 +29,7 @@
               rel="stylesheet">
         <!-- Main CSS File -->
         <link href="{% static '/css/main.css' %}" rel="stylesheet">
+        {% block extra_css %}{% endblock %}
         <!-- =======================================================
   * Template Name: Mentor
   * Template URL: https://bootstrapmade.com/mentor-free-education-bootstrap-theme/
@@ -210,5 +211,6 @@
         <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
         <!-- Main JS File -->
         <script src="{% static 'js/main.js' %}"></script>
+        {% block extra_js %}{% endblock %}
     </body>
 </html>
