@@ -248,3 +248,6 @@ fabric.properties
 # Claude Code context file
 CLAUDE.md
 .claude/
+
+# Personal TODO list
+TODO.md

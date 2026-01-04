@@ -18,6 +18,13 @@ class SignUpView(CreateView):
 
 class LoginView(DjangoLoginView):
     template_name = "login.html"
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next") or self.request.POST.get("next")
+        if next_url:
+            return next_url
+        return super().get_success_url()
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):

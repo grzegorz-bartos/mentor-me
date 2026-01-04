@@ -1,4 +1,5 @@
-from datetime import datetime, time, timedelta
+import calendar
+from datetime import date, datetime, time, timedelta
 from types import SimpleNamespace
 
 from django.contrib import messages
@@ -226,9 +227,6 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
         return kwargs
 
     def get_context_data(self, **kwargs):
-        import calendar
-        from datetime import date
-
         context = super().get_context_data(**kwargs)
         listing = self.get_listing()
         context["listing"] = listing
