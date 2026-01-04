@@ -1,5 +1,7 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as DjangoLoginView
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
 
@@ -31,27 +33,48 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = "profile.html"
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         user = self.request.user
 
         # plan/subscription info
         sub = Subscription.objects.filter(user=user).select_related("plan").first()
-        ctx["subscription"] = sub
-        ctx["current_plan_level"] = getattr(user, "role_level", None)
-        ctx["plans"] = Plan.objects.order_by("level")
+        context["subscription"] = sub
+        context["current_plan_level"] = getattr(user, "role_level", None)
+        context["plans"] = Plan.objects.order_by("level")
 
-        # user’s content
-        ctx["my_listings"] = Listing.objects.filter(user=user).order_by("-created_at")[
-            :20
-        ]
-        ctx["my_jobs"] = (
+        # user's content
+        context["my_listings"] = Listing.objects.filter(user=user).order_by(
+            "-created_at"
+        )[:20]
+        context["my_jobs"] = (
             Job.objects.filter(user=user)
             .order_by("-created_at")
             .prefetch_related("proposals")
         )
-        ctx["my_offers"] = (
+        context["my_offers"] = (
             Proposal.objects.filter(user=user)
             .select_related("job")
             .order_by("-created_at")[:20]
         )
-        return ctx
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        field = request.POST.get("field")
+        user = request.user
+
+        if field in ["username", "email"]:
+            value = request.POST.get(field)
+            if value:
+                setattr(user, field, value)
+                try:
+                    user.save()
+                    messages.success(
+                        request, f"{field.capitalize()} updated successfully!"
+                    )
+                except Exception as e:
+                    messages.error(request, f"Error updating {field}: {str(e)}")
+            else:
+                messages.error(request, f"{field.capitalize()} cannot be empty")
+
+        return redirect("profile")
