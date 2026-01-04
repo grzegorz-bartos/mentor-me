@@ -13,7 +13,7 @@ from .forms import AccountCreationForm
 class SignUpView(CreateView):
     form_class = AccountCreationForm
     template_name = "signup.html"
-    success_url = reverse_lazy("login")  # after sign up -> login page
+    success_url = reverse_lazy("login")
 
 
 class LoginView(DjangoLoginView):
