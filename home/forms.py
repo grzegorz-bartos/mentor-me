@@ -1,11 +1,11 @@
 from django import forms
 
-from .models import Review
+from .models import Testimonial
 
 
-class ReviewForm(forms.ModelForm):
+class TestimonialForm(forms.ModelForm):
     class Meta:
-        model = Review
+        model = Testimonial
         fields = ["rating", "text"]
         widgets = {
             "rating": forms.RadioSelect(

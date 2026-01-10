@@ -4,7 +4,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from home.views import AboutView, ContactView, CreateReviewView, HomeView
+from home.views import (
+    AboutView,
+    ContactView,
+    CreateTestimonialView,
+    HomeView,
+    UpdateTestimonialView,
+)
 from jobs.views import (
     AcceptOfferView,
     JobCreateView,
@@ -35,7 +41,16 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", HomeView.as_view(), name="home"),
     path("about/", AboutView.as_view(), name="about"),
-    path("about/review/", CreateReviewView.as_view(), name="create-review"),
+    path(
+        "about/testimonial/",
+        CreateTestimonialView.as_view(),
+        name="create-testimonial",
+    ),
+    path(
+        "about/testimonial/update/",
+        UpdateTestimonialView.as_view(),
+        name="update-testimonial",
+    ),
     path("contact/", ContactView.as_view(), name="contact"),
     path("accounts/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),

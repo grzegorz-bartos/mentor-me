@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Availability, Booking, Listing
+from .models import Availability, Booking, Listing, Review
 
 
 @admin.register(Listing)
@@ -19,6 +19,31 @@ class AvailabilityAdmin(admin.ModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("id", "listing", "student", "date", "start_time", "end_time", "status", "created_at")
+    list_display = (
+        "id",
+        "listing",
+        "student",
+        "date",
+        "start_time",
+        "end_time",
+        "status",
+        "created_at",
+    )
     list_filter = ("status", "date")
     search_fields = ("listing__title", "student__username")
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "reviewer",
+        "reviewed_user",
+        "rating",
+        "booking",
+        "job",
+        "created_at",
+    )
+    list_filter = ("rating", "created_at")
+    search_fields = ("reviewer__username", "reviewed_user__username", "comment")
+    readonly_fields = ("created_at", "updated_at")

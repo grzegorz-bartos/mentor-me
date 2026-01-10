@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Availability, Booking, Listing
+from .models import Availability, Booking, Listing, Review
 
 
 class ListingCreationForm(forms.ModelForm):
@@ -62,3 +62,22 @@ class BookingForm(forms.ModelForm):
         if time_str:
             return datetime.strptime(time_str, "%H:%M").time()
         return time_str
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ["rating", "comment"]
+        widgets = {
+            "rating": forms.RadioSelect(
+                choices=[(5, "5"), (4, "4"), (3, "3"), (2, "2"), (1, "1")],
+                attrs={"class": "rating-input"},
+            ),
+            "comment": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Share your experience...",
+                    "rows": 4,
+                }
+            ),
+        }

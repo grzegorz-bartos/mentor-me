@@ -4,8 +4,10 @@ from django.db import models
 from users.models import Account
 
 
-class Review(models.Model):
-    user = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="reviews")
+class Testimonial(models.Model):
+    user = models.OneToOneField(
+        Account, on_delete=models.CASCADE, related_name="testimonial"
+    )
     rating = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)], default=5
     )
