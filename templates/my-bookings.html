@@ -31,9 +31,12 @@
                                                         </span>
                                                     </h5>
                                                     <p class="mb-2">
-                                                        <strong>Student:</strong> {{ booking.student.username }}<br>
-                                                        <strong>Date:</strong> {{ booking.date }}<br>
-                                                        <strong>Time:</strong> {{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}<br>
+                                                        <strong>Student:</strong> {{ booking.student.username }}
+                                                        <br>
+                                                        <strong>Date:</strong> {{ booking.date }}
+                                                        <br>
+                                                        <strong>Time:</strong> {{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}
+                                                        <br>
                                                         <strong>Duration:</strong> {{ booking.duration_hours }} hours
                                                     </p>
                                                     {% if booking.notes %}
@@ -44,20 +47,34 @@
                                                 </div>
                                                 {% if booking.status == 'pending' %}
                                                     <div class="d-flex gap-2">
-                                                        <form method="post" action="{% url 'update-booking-status' booking.id 'confirmed' %}" style="margin: 0;">
+                                                        <form method="post"
+                                                              action="{% url 'update-booking-status' booking.id 'confirmed' %}"
+                                                              style="margin: 0">
                                                             {% csrf_token %}
                                                             <button type="submit" class="btn btn-success btn-sm">Confirm</button>
                                                         </form>
-                                                        <form method="post" action="{% url 'update-booking-status' booking.id 'cancelled' %}" style="margin: 0;">
+                                                        <form method="post"
+                                                              action="{% url 'update-booking-status' booking.id 'cancelled' %}"
+                                                              style="margin: 0">
                                                             {% csrf_token %}
                                                             <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
                                                         </form>
                                                     </div>
                                                 {% elif booking.status == 'confirmed' %}
-                                                    <form method="post" action="{% url 'update-booking-status' booking.id 'completed' %}" style="margin: 0;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-secondary btn-sm">Mark Complete</button>
-                                                    </form>
+                                                    <div class="d-flex gap-2">
+                                                        <form method="post"
+                                                              action="{% url 'update-booking-status' booking.id 'completed' %}"
+                                                              style="margin: 0">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-secondary btn-sm">Mark Complete</button>
+                                                        </form>
+                                                        <form method="post"
+                                                              action="{% url 'update-booking-status' booking.id 'cancelled' %}"
+                                                              style="margin: 0">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                                                        </form>
+                                                    </div>
                                                 {% endif %}
                                             </div>
                                         </div>
