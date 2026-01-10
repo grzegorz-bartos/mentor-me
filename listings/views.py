@@ -375,6 +375,12 @@ def get_available_slots(request, listing_id):
         status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
     ).values_list("start_time", "end_time")
 
+    from django.utils import timezone
+
+    now = timezone.now()
+    now_local = timezone.localtime(now)
+    booking_cutoff_local = now_local + timedelta(minutes=10)
+
     all_slots = []
     for availability in availabilities:
         current_time = datetime.combine(selected_date, availability.start_time)
@@ -383,6 +389,14 @@ def get_available_slots(request, listing_id):
         while current_time < end_time:
             time_value = current_time.time()
             is_available = True
+
+            slot_datetime_naive = datetime.combine(selected_date, time_value)
+            slot_datetime_aware = timezone.make_aware(slot_datetime_naive)
+            slot_datetime_local = timezone.localtime(slot_datetime_aware)
+
+            if slot_datetime_local < booking_cutoff_local:
+                current_time += timedelta(hours=1)
+                continue
 
             slot_end = current_time + timedelta(hours=1)
 

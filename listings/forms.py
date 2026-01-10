@@ -60,8 +60,45 @@ class BookingForm(forms.ModelForm):
 
         time_str = self.cleaned_data.get("start_time")
         if time_str:
-            return datetime.strptime(time_str, "%H:%M").time()
+            parsed_time = datetime.strptime(time_str, "%H:%M").time()
+
+            if parsed_time.minute != 0 or parsed_time.second != 0:
+                raise forms.ValidationError(
+                    "Bookings must be on the hour. Minutes and seconds must be :00."
+                )
+
+            if parsed_time.hour < 6 or parsed_time.hour >= 23:
+                raise forms.ValidationError(
+                    "Booking times must be between 6:00 AM and 10:00 PM."
+                )
+
+            return parsed_time
         return time_str
+
+    def clean(self):
+        from datetime import datetime, timedelta
+
+        from django.utils import timezone
+
+        cleaned_data = super().clean()
+        date = cleaned_data.get("date")
+        start_time = cleaned_data.get("start_time")
+
+        if date and start_time:
+            booking_datetime_naive = datetime.combine(date, start_time)
+            booking_datetime_aware = timezone.make_aware(booking_datetime_naive)
+            booking_datetime_local = timezone.localtime(booking_datetime_aware)
+
+            now = timezone.now()
+            now_local = timezone.localtime(now)
+            booking_cutoff_local = now_local + timedelta(minutes=10)
+
+            if booking_datetime_local < booking_cutoff_local:
+                raise forms.ValidationError(
+                    "Bookings must be made at least 10 minutes in advance. Please select a later time."
+                )
+
+        return cleaned_data
 
 
 class ReviewForm(forms.ModelForm):
