@@ -52,8 +52,11 @@
                                 {% if user.is_authenticated and current_plan_level == 1 %}
                                     <button class="btn-buy" disabled>Current plan</button>
                                 {% elif user.is_authenticated %}
-                                    <a href="{% url 'change-plan' 1 %}?next={{ request.path }}"
-                                       class="btn-buy">Choose Student</a>
+                                    <form method="post"
+                                          action="{% url 'change-plan' 1 %}?next={{ request.path }}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-buy">Choose Student</button>
+                                    </form>
                                 {% else %}
                                     <a href="{% url 'login' %}?next={{ request.path }}" class="btn-buy">Choose Student</a>
                                 {% endif %}
@@ -78,8 +81,11 @@
                                 {% if user.is_authenticated and current_plan_level == 2 %}
                                     <button class="btn-buy" disabled>Current plan</button>
                                 {% elif user.is_authenticated %}
-                                    <a href="{% url 'change-plan' 2 %}?next={{ request.path }}"
-                                       class="btn-buy">Choose Tutor</a>
+                                    <form method="post"
+                                          action="{% url 'change-plan' 2 %}?next={{ request.path }}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-buy">Choose Tutor</button>
+                                    </form>
                                 {% else %}
                                     <a href="{% url 'login' %}?next={{ request.path }}" class="btn-buy">Choose Tutor</a>
                                 {% endif %}
@@ -104,8 +110,11 @@
                                 {% if user.is_authenticated and current_plan_level == 3 %}
                                     <button class="btn-buy" disabled>Current plan</button>
                                 {% elif user.is_authenticated %}
-                                    <a href="{% url 'change-plan' 3 %}?next={{ request.path }}"
-                                       class="btn-buy">Choose Freelancer</a>
+                                    <form method="post"
+                                          action="{% url 'change-plan' 3 %}?next={{ request.path }}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-buy">Choose Freelancer</button>
+                                    </form>
                                 {% else %}
                                     <a href="{% url 'login' %}?next={{ request.path }}" class="btn-buy">Choose Freelancer</a>
                                 {% endif %}
@@ -131,8 +140,11 @@
                                 {% if user.is_authenticated and current_plan_level == 4 %}
                                     <button class="btn-buy" disabled>Current plan</button>
                                 {% elif user.is_authenticated %}
-                                    <a href="{% url 'change-plan' 4 %}?next={{ request.path }}"
-                                       class="btn-buy">Choose Mentor</a>
+                                    <form method="post"
+                                          action="{% url 'change-plan' 4 %}?next={{ request.path }}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-buy">Choose Mentor</button>
+                                    </form>
                                 {% else %}
                                     <a href="{% url 'login' %}?next={{ request.path }}" class="btn-buy">Choose Mentor</a>
                                 {% endif %}

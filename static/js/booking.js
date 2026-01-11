@@ -1,57 +1,89 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('id_date');
-    const startTimeSelect = document.getElementById('id_start_time');
-    const durationSelect = document.getElementById('id_duration_hours');
+    const timeSlotsContainer = document.getElementById('time-slots-container');
+    const hiddenDateInput = document.getElementById('selected-date');
+    const hiddenTimeInput = document.getElementById('selected-time');
+    const submitButton = document.getElementById('submit-booking');
+    const timeLabel = document.getElementById('time-label');
     const listingId = document.getElementById('listing-id').value;
 
-    startTimeSelect.disabled = true;
-    durationSelect.disabled = true;
+    initializeTimeSlots();
 
-    const originalTimeOption = startTimeSelect.querySelector('option');
-    const originalDurationOption = durationSelect.querySelector('option');
+    document.querySelectorAll('.calendar-day').forEach(day => {
+        day.addEventListener('click', function() {
+            if (this.classList.contains('past') ||
+                this.classList.contains('other-month') ||
+                this.classList.contains('unavailable')) {
+                return;
+            }
 
-    dateInput.addEventListener('change', function() {
-        const selectedDate = this.value;
+            const previouslySelected = document.querySelector('.calendar-day.selected');
+            if (previouslySelected) {
+                previouslySelected.classList.remove('selected');
+            }
 
-        if (!selectedDate) {
-            startTimeSelect.disabled = true;
-            durationSelect.disabled = true;
-            return;
+            this.classList.add('selected');
+            const selectedDate = this.dataset.date;
+            hiddenDateInput.value = selectedDate;
+
+            hiddenTimeInput.value = '';
+            submitButton.disabled = true;
+
+            timeLabel.textContent = 'Select Time';
+
+            fetchAvailableSlots(selectedDate);
+        });
+    });
+
+    function initializeTimeSlots() {
+        timeSlotsContainer.innerHTML = '';
+
+        for (let hour = 6; hour < 23; hour++) {
+            const timeButton = document.createElement('button');
+            timeButton.type = 'button';
+            timeButton.className = 'time-slot-btn booked';
+            timeButton.disabled = true;
+
+            const displayHour = hour % 12 || 12;
+            const period = hour < 12 ? 'AM' : 'PM';
+            timeButton.textContent = `${displayHour}:00 ${period}`;
+            timeButton.dataset.value = `${hour.toString().padStart(2, '0')}:00`;
+
+            timeSlotsContainer.appendChild(timeButton);
         }
+    }
 
-        startTimeSelect.innerHTML = '<option value="">Loading...</option>';
-        startTimeSelect.disabled = true;
-
-        fetch(`/listings/${listingId}/available-slots/?date=${selectedDate}`)
+    function fetchAvailableSlots(date) {
+        fetch(`/listings/${listingId}/available-slots/?date=${date}`)
             .then(response => response.json())
             .then(data => {
-                startTimeSelect.innerHTML = '';
+                const buttons = timeSlotsContainer.querySelectorAll('.time-slot-btn');
 
-                if (data.slots && data.slots.length > 0) {
-                    const placeholder = document.createElement('option');
-                    placeholder.value = '';
-                    placeholder.textContent = '---------';
-                    startTimeSelect.appendChild(placeholder);
+                buttons.forEach(btn => {
+                    const slot = data.slots.find(s => s.value === btn.dataset.value);
 
-                    data.slots.forEach(slot => {
-                        const option = document.createElement('option');
-                        option.value = slot.value;
-                        option.textContent = slot.display;
-                        startTimeSelect.appendChild(option);
-                    });
+                    if (slot) {
+                        btn.disabled = !slot.is_available;
+                        btn.className = slot.is_available ? 'time-slot-btn' : 'time-slot-btn booked';
 
-                    startTimeSelect.disabled = false;
-                    durationSelect.disabled = false;
-                } else {
-                    const noSlots = document.createElement('option');
-                    noSlots.value = '';
-                    noSlots.textContent = 'No available time slots';
-                    startTimeSelect.appendChild(noSlots);
-                }
+                        if (slot.is_available && !btn.hasAttribute('data-initialized')) {
+                            btn.setAttribute('data-initialized', 'true');
+                            btn.addEventListener('click', function() {
+                                buttons.forEach(b => b.classList.remove('selected'));
+                                this.classList.add('selected');
+                                hiddenTimeInput.value = this.dataset.value;
+                                submitButton.disabled = false;
+                            });
+                        }
+                    } else {
+                        btn.disabled = true;
+                        btn.className = 'time-slot-btn booked';
+                    }
+
+                    btn.classList.remove('selected');
+                });
             })
             .catch(error => {
                 console.error('Error fetching time slots:', error);
-                startTimeSelect.innerHTML = '<option value="">Error loading slots</option>';
             });
-    });
+    }
 });

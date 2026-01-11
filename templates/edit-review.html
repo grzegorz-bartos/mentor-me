@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <main class="main">
+        <div class="page-title" data-aos="fade">
+            <div class="heading">
+                <div class="container">
+                    <div class="row d-flex justify-content-center text-center">
+                        <div class="col-lg-8">
+                            <h1>Edit Review</h1>
+                            <p class="mb-0">Update your review for {{ review.reviewed_user.display_name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <section class="contact section">
+            <div class="container" data-aos="fade-up">
+                <div class="row justify-content-center">
+                    <div class="col-lg-6">
+                        <div class="p-4 border rounded-3">
+                            <div class="mb-4 text-center">
+                                <img src="{{ review.reviewed_user.avatar_url }}"
+                                     class="rounded-circle mb-2"
+                                     alt="{{ review.reviewed_user.display_name }}"
+                                     width="80"
+                                     height="80">
+                                <h5 class="mb-1">{{ review.reviewed_user.display_name }}</h5>
+                                {% if review.booking %}
+                                    <p class="text-muted small mb-0">{{ review.booking.listing.title }}</p>
+                                    <p class="text-muted small">{{ review.booking.date }} at {{ review.booking.start_time|time:"g:i A" }}</p>
+                                {% endif %}
+                            </div>
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label d-block text-center">Rating</label>
+                                    <div class="star-rating d-flex gap-1 justify-content-center mb-3">
+                                        <input type="radio"
+                                               name="rating"
+                                               value="5"
+                                               id="star5"
+                                               {% if review.rating == 5 %}checked{% endif %}>
+                                        <label for="star5">★</label>
+                                        <input type="radio"
+                                               name="rating"
+                                               value="4"
+                                               id="star4"
+                                               {% if review.rating == 4 %}checked{% endif %}>
+                                        <label for="star4">★</label>
+                                        <input type="radio"
+                                               name="rating"
+                                               value="3"
+                                               id="star3"
+                                               {% if review.rating == 3 %}checked{% endif %}>
+                                        <label for="star3">★</label>
+                                        <input type="radio"
+                                               name="rating"
+                                               value="2"
+                                               id="star2"
+                                               {% if review.rating == 2 %}checked{% endif %}>
+                                        <label for="star2">★</label>
+                                        <input type="radio"
+                                               name="rating"
+                                               value="1"
+                                               id="star1"
+                                               {% if review.rating == 1 %}checked{% endif %}
+                                               required>
+                                        <label for="star1">★</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="id_comment" class="form-label">Your Review</label>
+                                    <textarea name="comment"
+                                              id="id_comment"
+                                              class="form-control"
+                                              placeholder="Share your experience..."
+                                              rows="4"
+                                              required>{{ review.comment }}</textarea>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Update Review</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <style>
+        .star-rating {
+            direction: rtl;
+            font-size: 2.5rem;
+        }
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+        .star-rating label {
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .star-rating input[type="radio"]:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #ffc107;
+        }
+    </style>
+{% endblock %}

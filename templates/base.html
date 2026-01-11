@@ -29,6 +29,7 @@
               rel="stylesheet">
         <!-- Main CSS File -->
         <link href="{% static '/css/main.css' %}" rel="stylesheet">
+        {% block extra_css %}{% endblock %}
         <!-- =======================================================
   * Template Name: Mentor
   * Template URL: https://bootstrapmade.com/mentor-free-education-bootstrap-theme/
@@ -57,16 +58,16 @@
                                {% if request.path == '/about/' %}class="active"{% endif %}>About</a>
                         </li>
                         <li>
+                            <a href="/jobs/"
+                               {% if request.path == '/jobs/' %}class="active"{% endif %}>Jobs</a>
+                        </li>
+                        <li>
                             <a href="/listings/"
-                               {% if request.path == '/listings/' %}class="active"{% endif %}>Find a Tutor</a>
+                               {% if request.path == '/listings/' %}class="active"{% endif %}>Tutoring</a>
                         </li>
                         <li>
                             <a href="/mentoring/"
-                               {% if request.path == '/mentoring/' %}class="active"{% endif %}>Find a Mentor</a>
-                        </li>
-                        <li>
-                            <a href="/jobs/"
-                               {% if request.path == '/jobs/' %}class="active"{% endif %}>Student Jobs</a>
+                               {% if request.path == '/mentoring/' %}class="active"{% endif %}>Mentoring</a>
                         </li>
                         <li>
                             <a href="/pricing/"
@@ -112,7 +113,7 @@
         {% block content %}{% endblock %}
         <footer id="footer" class="footer position-relative light-background">
             <div class="container footer-top">
-                <div class="row gy-4">
+                <div class="row gy-4 justify-content-center">
                     <div class="col-lg-4 col-md-6 footer-about">
                         <a href="" class="logo d-flex align-items-center">
                             <span class="sitename">MentorMe</span>
@@ -123,12 +124,14 @@
                                 <strong>Email:</strong> <span>support@mentorme.edu</span>
                             </p>
                         </div>
+                        {% comment %}
                         <div class="social-links d-flex mt-4">
                             <a href=""><i class="bi bi-twitter-x"></i></a>
                             <a href=""><i class="bi bi-facebook"></i></a>
                             <a href=""><i class="bi bi-instagram"></i></a>
                             <a href=""><i class="bi bi-linkedin"></i></a>
                         </div>
+                        {% endcomment %}
                     </div>
                     <div class="col-lg-2 col-md-3 footer-links">
                         <h4>Quick Links</h4>
@@ -144,9 +147,6 @@
                             </li>
                             <li>
                                 <a href="/mentoring/">Find a Mentor</a>
-                            </li>
-                            <li>
-                                <a href="/pricing/">Membership Plans</a>
                             </li>
                         </ul>
                     </div>
@@ -167,10 +167,11 @@
                             </li>
                         </ul>
                     </div>
+                    {% comment %}
                     <div class="col-lg-4 col-md-12 footer-newsletter">
                         <h4>Stay Connected</h4>
                         <p>Get the latest educational resources, tutor spotlights, and learning tips delivered to your inbox!</p>
-                        <form action="forms/newsletter.php" method="post" class="php-email-form">
+                        <form method="post" class="php-email-form">
                             <div class="newsletter-form">
                                 <input type="email" name="email" placeholder="Your email">
                                 <input type="submit" value="Subscribe">
@@ -180,6 +181,7 @@
                             <div class="sent-message">Thank you for subscribing!</div>
                         </form>
                     </div>
+                    {% endcomment %}
                 </div>
             </div>
             <div class="container copyright text-center mt-4">
@@ -210,5 +212,6 @@
         <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
         <!-- Main JS File -->
         <script src="{% static 'js/main.js' %}"></script>
+        {% block extra_js %}{% endblock %}
     </body>
 </html>

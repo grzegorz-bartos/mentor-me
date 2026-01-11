@@ -37,6 +37,7 @@ mdurl==0.1.2
 nltk==3.9.2
 nodeenv==1.9.1
 packaging==25.0
+pipi==1.0.1
 platformdirs==4.4.0
 pre_commit==4.3.0
 psutil==7.1.0

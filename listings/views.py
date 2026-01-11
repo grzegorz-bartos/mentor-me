@@ -1,17 +1,19 @@
-from datetime import datetime, timedelta
+import calendar
+from datetime import date, datetime, time, timedelta
+from types import SimpleNamespace
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 from django_filters.views import FilterView
 
 from .filters import ListingFilter
-from .forms import AvailabilityForm, BookingForm, ListingCreationForm
-from .models import Availability, Booking, Listing
+from .forms import AvailabilityForm, BookingForm, ListingCreationForm, ReviewForm
+from .models import Availability, Booking, Listing, Review
 
 
 class ListingListView(FilterView):
@@ -194,19 +196,72 @@ class MyBookingsView(LoginRequiredMixin, ListView):
     context_object_name = "bookings"
 
     def get_queryset(self):
-        return Booking.objects.filter(listing__user=self.request.user).select_related(
-            "student", "listing"
+        bookings = (
+            Booking.objects.filter(listing__user=self.request.user)
+            .select_related("student", "listing")
+            .prefetch_related("reviews")
         )
+
+        for booking in bookings:
+            booking.user_has_reviewed = booking.reviews.filter(
+                reviewer=self.request.user
+            ).exists()
+
+        return bookings
 
 
 class UpdateBookingStatusView(LoginRequiredMixin, View):
     def post(self, request, booking_id, status):
-        booking = get_object_or_404(Booking, pk=booking_id, listing__user=request.user)
-        if status in dict(Booking.Status.choices):
+        booking = get_object_or_404(Booking, pk=booking_id)
+
+        is_tutor = booking.listing.user == request.user
+        is_student = booking.student == request.user
+
+        if not (is_tutor or is_student):
+            messages.error(request, "You don't have permission to modify this booking.")
+            return redirect("profile")
+
+        if status == "completed":
+            if is_tutor:
+                booking.tutor_marked_complete = True
+            elif is_student:
+                booking.student_marked_complete = True
+
+            if booking.tutor_marked_complete and booking.student_marked_complete:
+                booking.status = Booking.Status.COMPLETED
+                messages.success(
+                    request, "Booking marked as completed by both parties!"
+                )
+            else:
+                other_party = "student" if is_tutor else "tutor"
+                messages.success(
+                    request,
+                    f"You marked this booking as complete. Waiting for {other_party} to confirm.",
+                )
+
+            booking.save()
+
+        elif status == "unmark_completed":
+            if is_tutor:
+                booking.tutor_marked_complete = False
+            elif is_student:
+                booking.student_marked_complete = False
+
+            if booking.status == Booking.Status.COMPLETED:
+                booking.status = Booking.Status.CONFIRMED
+
+            booking.save()
+            messages.success(request, "Completion mark removed.")
+
+        elif status in dict(Booking.Status.choices):
             booking.status = status
             booking.save()
             messages.success(request, f"Booking {status}.")
-        return redirect("my-bookings")
+
+        if is_tutor:
+            return redirect("my-bookings")
+        else:
+            return redirect("student-bookings")
 
 
 class CreateBookingView(LoginRequiredMixin, CreateView):
@@ -226,19 +281,82 @@ class CreateBookingView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["listing"] = self.get_listing()
-        context["availabilities"] = self.get_listing().user.availabilities.filter(
-            is_active=True
-        )
+        listing = self.get_listing()
+        context["listing"] = listing
+        context["availabilities"] = listing.user.availabilities.filter(is_active=True)
+
+        # Add current year and month for calendar
+        today = date.today()
+        year, month = today.year, today.month
+        context["current_year"] = year
+        context["current_month"] = month
+
+        # Calculate availability counts for each day in the month
+        availability_counts = {}
+        _, num_days = calendar.monthrange(year, month)
+
+        for day in range(1, num_days + 1):
+            check_date = date(year, month, day)
+            if check_date >= today:  # Only check future dates
+                slot_count = self._count_available_slots(listing, check_date)
+                availability_counts[day] = slot_count
+
+        context["availability_counts"] = availability_counts
         return context
+
+    def _count_available_slots(self, listing, check_date):
+        """Count available time slots for a given date"""
+        day_of_week = check_date.weekday()
+        availabilities = listing.user.availabilities.filter(
+            day_of_week=day_of_week, is_active=True
+        )
+
+        if not availabilities.exists():
+            default_availability = SimpleNamespace(
+                start_time=time(6, 0), end_time=time(23, 0)
+            )
+            availabilities = [default_availability]
+
+        existing_bookings = Booking.objects.filter(
+            listing=listing,
+            date=check_date,
+            status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
+        ).values_list("start_time", "end_time")
+
+        slot_count = 0
+        for availability in availabilities:
+            current_time = datetime.combine(check_date, availability.start_time)
+            end_time = datetime.combine(check_date, availability.end_time)
+
+            while current_time < end_time:
+                is_available = True
+                slot_end = current_time + timedelta(hours=1)
+
+                for booking_start, booking_end in existing_bookings:
+                    booking_start_dt = datetime.combine(check_date, booking_start)
+                    booking_end_dt = datetime.combine(check_date, booking_end)
+
+                    if current_time < booking_end_dt and slot_end > booking_start_dt:
+                        is_available = False
+                        break
+
+                if is_available:
+                    slot_count += 1
+
+                current_time += timedelta(hours=1)
+
+        return slot_count
 
     def form_valid(self, form):
         form.instance.listing = self.get_listing()
         form.instance.student = self.request.user
 
         start_time = form.cleaned_data["start_time"]
-        duration_hours = form.cleaned_data["duration_hours"]
         booking_date = form.cleaned_data["date"]
+
+        # All bookings are fixed 1-hour sessions
+        duration_hours = 1
+        form.instance.duration_hours = duration_hours
 
         start_dt = datetime.combine(datetime.today(), start_time)
         end_dt = start_dt + timedelta(hours=duration_hours)
@@ -276,9 +394,18 @@ class StudentBookingsView(LoginRequiredMixin, ListView):
     context_object_name = "bookings"
 
     def get_queryset(self):
-        return Booking.objects.filter(student=self.request.user).select_related(
-            "listing", "listing__user"
+        bookings = (
+            Booking.objects.filter(student=self.request.user)
+            .select_related("listing", "listing__user")
+            .prefetch_related("reviews")
         )
+
+        for booking in bookings:
+            booking.user_has_reviewed = booking.reviews.filter(
+                reviewer=self.request.user
+            ).exists()
+
+        return bookings
 
 
 def get_available_slots(request, listing_id):
@@ -299,13 +426,22 @@ def get_available_slots(request, listing_id):
     )
 
     if not availabilities.exists():
-        return JsonResponse({"slots": []})
+        default_availability = SimpleNamespace(
+            start_time=time(6, 0), end_time=time(23, 0)
+        )
+        availabilities = [default_availability]
 
     existing_bookings = Booking.objects.filter(
         listing=listing,
         date=selected_date,
         status__in=[Booking.Status.PENDING, Booking.Status.CONFIRMED],
     ).values_list("start_time", "end_time")
+
+    from django.utils import timezone
+
+    now = timezone.now()
+    now_local = timezone.localtime(now)
+    booking_cutoff_local = now_local + timedelta(minutes=10)
 
     all_slots = []
     for availability in availabilities:
@@ -316,24 +452,140 @@ def get_available_slots(request, listing_id):
             time_value = current_time.time()
             is_available = True
 
+            slot_datetime_naive = datetime.combine(selected_date, time_value)
+            slot_datetime_aware = timezone.make_aware(slot_datetime_naive)
+            slot_datetime_local = timezone.localtime(slot_datetime_aware)
+
+            if slot_datetime_local < booking_cutoff_local:
+                current_time += timedelta(hours=1)
+                continue
+
+            slot_end = current_time + timedelta(hours=1)
+
             for booking_start, booking_end in existing_bookings:
                 booking_start_dt = datetime.combine(selected_date, booking_start)
                 booking_end_dt = datetime.combine(selected_date, booking_end)
 
-                if booking_start_dt <= current_time < booking_end_dt:
+                if current_time < booking_end_dt and slot_end > booking_start_dt:
                     is_available = False
                     break
 
-            if is_available:
-                hour = current_time.hour
-                minute = current_time.minute
-                display = (
-                    f"{hour % 12 or 12}:{minute:02d} {'AM' if hour < 12 else 'PM'}"
-                )
-                all_slots.append(
-                    {"value": time_value.strftime("%H:%M"), "display": display}
-                )
+            hour = current_time.hour
+            minute = current_time.minute
+            display = f"{hour % 12 or 12}:{minute:02d} {'AM' if hour < 12 else 'PM'}"
 
-            current_time += timedelta(minutes=15)
+            all_slots.append(
+                {
+                    "value": time_value.strftime("%H:%M"),
+                    "display": display,
+                    "is_available": is_available,
+                }
+            )
+
+            current_time += timedelta(hours=1)
 
     return JsonResponse({"slots": all_slots})
+
+
+class CreateReviewView(LoginRequiredMixin, View):
+    def get(self, request, booking_id):
+        booking = get_object_or_404(
+            Booking, pk=booking_id, status=Booking.Status.COMPLETED
+        )
+
+        is_tutor = booking.listing.user == request.user
+        is_student = booking.student == request.user
+
+        if not (is_tutor or is_student):
+            messages.error(request, "You don't have permission to review this booking.")
+            return redirect("profile")
+
+        reviewed_user = booking.student if is_tutor else booking.listing.user
+
+        existing_review = Review.objects.filter(
+            reviewer=request.user, booking=booking
+        ).first()
+
+        if existing_review:
+            messages.warning(request, "You have already reviewed this booking.")
+            return redirect("student-bookings" if is_student else "my-bookings")
+
+        form = ReviewForm()
+        return render(
+            request,
+            "create-review.html",
+            {"form": form, "booking": booking, "reviewed_user": reviewed_user},
+        )
+
+    def post(self, request, booking_id):
+        booking = get_object_or_404(
+            Booking, pk=booking_id, status=Booking.Status.COMPLETED
+        )
+
+        is_tutor = booking.listing.user == request.user
+        is_student = booking.student == request.user
+
+        if not (is_tutor or is_student):
+            messages.error(request, "You don't have permission to review this booking.")
+            return redirect("profile")
+
+        reviewed_user = booking.student if is_tutor else booking.listing.user
+
+        existing_review = Review.objects.filter(
+            reviewer=request.user, booking=booking
+        ).first()
+
+        if existing_review:
+            messages.warning(request, "You have already reviewed this booking.")
+            return redirect("student-bookings" if is_student else "my-bookings")
+
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.reviewer = request.user
+            review.reviewed_user = reviewed_user
+            review.booking = booking
+            review.save()
+            messages.success(request, "Review submitted successfully!")
+            return redirect("student-bookings" if is_student else "my-bookings")
+
+        return render(
+            request,
+            "create-review.html",
+            {"form": form, "booking": booking, "reviewed_user": reviewed_user},
+        )
+
+
+class EditReviewView(LoginRequiredMixin, View):
+    def get(self, request, review_id):
+        review = get_object_or_404(Review, pk=review_id, reviewer=request.user)
+
+        form = ReviewForm(instance=review)
+        return render(
+            request,
+            "edit-review.html",
+            {"form": form, "review": review},
+        )
+
+    def post(self, request, review_id):
+        review = get_object_or_404(Review, pk=review_id, reviewer=request.user)
+
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Review updated successfully!")
+            return redirect("profile")
+
+        return render(
+            request,
+            "edit-review.html",
+            {"form": form, "review": review},
+        )
+
+
+class DeleteReviewView(LoginRequiredMixin, View):
+    def post(self, request, review_id):
+        review = get_object_or_404(Review, pk=review_id, reviewer=request.user)
+        review.delete()
+        messages.success(request, "Review deleted successfully!")
+        return redirect("profile")

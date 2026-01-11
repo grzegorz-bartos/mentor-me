@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -48,7 +49,9 @@ class Availability(models.Model):
         SUNDAY = 6, "Sunday"
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="availabilities"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="availabilities",
     )
     day_of_week = models.IntegerField(choices=DayOfWeek.choices)
     start_time = models.TimeField()
@@ -84,6 +87,8 @@ class Booking(models.Model):
         max_length=20, choices=Status.choices, default=Status.PENDING
     )
     notes = models.TextField(blank=True)
+    tutor_marked_complete = models.BooleanField(default=False)
+    student_marked_complete = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -92,3 +97,39 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.student.username} -> {self.listing.title} on {self.date} ({self.status})"
+
+
+class Review(models.Model):
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="reviews_given",
+    )
+    reviewed_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="reviews_received",
+    )
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    comment = models.TextField()
+    booking = models.ForeignKey(
+        Booking, on_delete=models.CASCADE, null=True, blank=True, related_name="reviews"
+    )
+    job = models.ForeignKey(
+        "jobs.Job",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="reviews",
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = [("reviewer", "booking"), ("reviewer", "job")]
+
+    def __str__(self):
+        return f"{self.reviewer.username} -> {self.reviewed_user.username} ({self.rating} stars)"

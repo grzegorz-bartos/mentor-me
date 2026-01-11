@@ -6,7 +6,7 @@ from .models import Job, Proposal
 class JobForm(forms.ModelForm):
     class Meta:
         model = Job
-        fields = ["title", "description", "budget", "subject", "mode"]
+        fields = ["title", "description", "budget", "subject"]
 
 
 class ProposalForm(forms.ModelForm):

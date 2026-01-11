@@ -35,17 +35,83 @@
         </div>
         <!-- End Page Title -->
         {% include 'about-and-counts.html' %}
+        <!-- Why Us Section -->
+        <section id="why-us" class="section why-us">
+            <div class="container">
+                <div class="row gy-4">
+                    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="why-box">
+                            <h3>Why Choose MentorMe?</h3>
+                            <p>
+                                Our platform connects students with verified tutors and mentors across all subjects and skill levels.
+                                Whether you need help with homework, personalized software, or career guidance, find the perfect educator to help you succeed.
+                            </p>
+                            <div class="text-center">
+                                <a href="/about/" class="more-btn"><span>Learn More</span> <i class="bi bi-chevron-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Why Box -->
+                    <div class="col-lg-8 d-flex align-items-stretch">
+                        <div class="row gy-4" data-aos="fade-up" data-aos-delay="200">
+                            <div class="col-xl-4">
+                                <div class="icon-box d-flex flex-column justify-content-center align-items-center">
+                                    <i class="bi bi-mortarboard"></i>
+                                    <h4>Expert Tutors</h4>
+                                    <p>Access qualified tutors across all subjects and academic levels.</p>
+                                </div>
+                            </div>
+                            <!-- End Icon Box -->
+                            <div class="col-xl-4" data-aos="fade-up" data-aos-delay="300">
+                                <div class="icon-box d-flex flex-column justify-content-center align-items-center">
+                                    <i class="bi bi-people"></i>
+                                    <h4>Career Mentorship</h4>
+                                    <p>Get guidance from experienced professionals in your field of interest.</p>
+                                </div>
+                            </div>
+                            <!-- End Icon Box -->
+                            <div class="col-xl-4" data-aos="fade-up" data-aos-delay="400">
+                                <div class="icon-box d-flex flex-column justify-content-center align-items-center">
+                                    <i class="bi bi-graph-up"></i>
+                                    <h4>Flexible Learning</h4>
+                                    <p>Learn at your own pace with personalized one-on-one sessions.</p>
+                                </div>
+                            </div>
+                            <!-- End Icon Box -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- /Why Us Section -->
         <!-- Testimonials Section -->
         <section id="testimonials" class="testimonials section">
             <!-- Section Title -->
             <div class="container section-title" data-aos="fade-up">
-                <h2>Testimonials</h2>
-                <p>What are they saying</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2>Testimonials</h2>
+                        <p>What are they saying</p>
+                    </div>
+                    {% if user.is_authenticated %}
+                        <button type="button"
+                                class="btn btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#testimonialModal">
+                            {% if user.testimonial %}
+                                View Your Testimonial
+                            {% else %}
+                                Share your opinion
+                            {% endif %}
+                        </button>
+                    {% endif %}
+                </div>
             </div>
             <!-- End Section Title -->
             <div class="container" data-aos="fade-up" data-aos-delay="100">
-                <div class="swiper init-swiper">
-                    <script type="application/json" class="swiper-config">
+                {% if testimonials %}
+                    <div class="swiper init-swiper">
+                        <script type="application/json" class="swiper-config">
     {
       "loop": true,
       "speed": 600,
@@ -69,113 +135,183 @@
         }
       }
     }
-                    </script>
-                    <div class="swiper-wrapper">
-                        <div class="swiper-slide">
-                            <div class="testimonial-wrap">
-                                <div class="testimonial-item">
-                                    <img src="assets/img/testimonials/testimonials-1.jpg"
-                                         class="testimonial-img"
-                                         alt="">
-                                    <h3>Saul Goodman</h3>
-                                    <h4>Ceo &amp; Founder</h4>
-                                    <div class="stars">
-                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                        </script>
+                        <div class="swiper-wrapper">
+                            {% for testimonial in testimonials %}
+                                <div class="swiper-slide">
+                                    <div class="testimonial-wrap">
+                                        <div class="testimonial-item">
+                                            <h3>{{ testimonial.user.get_full_name|default:testimonial.user.username }}</h3>
+                                            <h4>{{ testimonial.get_role_display }}</h4>
+                                            <div class="stars">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= testimonial.rating %}
+                                                        <i class="bi bi-star-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <p>
+                                                <i class="bi bi-quote quote-icon-left"></i>
+                                                <span>{{ testimonial.text }}</span>
+                                                <i class="bi bi-quote quote-icon-right"></i>
+                                            </p>
+                                        </div>
                                     </div>
-                                    <p>
-                                        <i class="bi bi-quote quote-icon-left"></i>
-                                        <span>Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper.</span>
-                                        <i class="bi bi-quote quote-icon-right"></i>
-                                    </p>
                                 </div>
-                            </div>
+                            {% endfor %}
                         </div>
-                        <!-- End testimonial item -->
-                        <div class="swiper-slide">
-                            <div class="testimonial-wrap">
-                                <div class="testimonial-item">
-                                    <img src="assets/img/testimonials/testimonials-2.jpg"
-                                         class="testimonial-img"
-                                         alt="">
-                                    <h3>Sara Wilsson</h3>
-                                    <h4>Designer</h4>
-                                    <div class="stars">
-                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                                    </div>
-                                    <p>
-                                        <i class="bi bi-quote quote-icon-left"></i>
-                                        <span>Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa.</span>
-                                        <i class="bi bi-quote quote-icon-right"></i>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- End testimonial item -->
-                        <div class="swiper-slide">
-                            <div class="testimonial-wrap">
-                                <div class="testimonial-item">
-                                    <img src="assets/img/testimonials/testimonials-3.jpg"
-                                         class="testimonial-img"
-                                         alt="">
-                                    <h3>Jena Karlis</h3>
-                                    <h4>Store Owner</h4>
-                                    <div class="stars">
-                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                                    </div>
-                                    <p>
-                                        <i class="bi bi-quote quote-icon-left"></i>
-                                        <span>Enim nisi quem export duis labore cillum quae magna enim sint quorum nulla quem veniam duis minim tempor labore quem eram duis noster aute amet eram fore quis sint minim.</span>
-                                        <i class="bi bi-quote quote-icon-right"></i>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- End testimonial item -->
-                        <div class="swiper-slide">
-                            <div class="testimonial-wrap">
-                                <div class="testimonial-item">
-                                    <img src="assets/img/testimonials/testimonials-4.jpg"
-                                         class="testimonial-img"
-                                         alt="">
-                                    <h3>Matt Brandon</h3>
-                                    <h4>Freelancer</h4>
-                                    <div class="stars">
-                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                                    </div>
-                                    <p>
-                                        <i class="bi bi-quote quote-icon-left"></i>
-                                        <span>Fugiat enim eram quae cillum dolore dolor amet nulla culpa multos export minim fugiat minim velit minim dolor enim duis veniam ipsum anim magna sunt elit fore quem dolore labore illum veniam.</span>
-                                        <i class="bi bi-quote quote-icon-right"></i>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- End testimonial item -->
-                        <div class="swiper-slide">
-                            <div class="testimonial-wrap">
-                                <div class="testimonial-item">
-                                    <img src="assets/img/testimonials/testimonials-5.jpg"
-                                         class="testimonial-img"
-                                         alt="">
-                                    <h3>John Larson</h3>
-                                    <h4>Entrepreneur</h4>
-                                    <div class="stars">
-                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                                    </div>
-                                    <p>
-                                        <i class="bi bi-quote quote-icon-left"></i>
-                                        <span>Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat legam esse veniam culpa fore nisi cillum quid.</span>
-                                        <i class="bi bi-quote quote-icon-right"></i>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- End testimonial item -->
+                        <div class="swiper-pagination"></div>
                     </div>
-                    <div class="swiper-pagination"></div>
-                </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <p>No testimonials yet. Be the first to share your experience!</p>
+                    </div>
+                {% endif %}
             </div>
         </section>
         <!-- /Testimonials Section -->
+        <!-- Review Modal -->
+        {% if user.is_authenticated %}
+            <div class="modal fade"
+                 id="testimonialModal"
+                 tabindex="-1"
+                 aria-labelledby="testimonialModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="testimonialModalLabel">
+                                {% if user.testimonial %}
+                                    Your Testimonial
+                                {% else %}
+                                    Share Your Opinion
+                                {% endif %}
+                            </h5>
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
+                        {% if user.testimonial %}
+                            <div class="modal-body" id="view-mode">
+                                <div class="alert alert-success">
+                                    <i class="bi bi-check-circle"></i> Thank you for sharing your testimonial!
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Your Rating</label>
+                                    <div class="stars">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= user.testimonial.rating %}
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-warning"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Your Testimonial</label>
+                                    <p class="border rounded p-3 bg-light">{{ user.testimonial.text }}</p>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> Your testimonial is visible on this page below.
+                                </small>
+                            </div>
+                            <div class="modal-footer" id="view-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="toggleEditMode()">Edit</button>
+                            </div>
+                            <form method="post"
+                                  action="{% url 'update-testimonial' %}"
+                                  id="edit-mode"
+                                  style="display: none">
+                                {% csrf_token %}
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Rating</label>
+                                        <div class="d-flex gap-2 flex-row-reverse justify-content-end">
+                                            {% for value in "54321" %}
+                                                <input type="radio"
+                                                       class="btn-check"
+                                                       name="rating"
+                                                       id="edit-rating-{{ value }}"
+                                                       value="{{ value }}"
+                                                       {% if user.testimonial.rating|stringformat:"s" == value %}checked{% endif %}>
+                                                <label class="btn btn-outline-warning" for="edit-rating-{{ value }}">
+                                                    <i class="bi bi-star-fill"></i> {{ value }}
+                                                </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="edit_text" class="form-label">Your Review</label>
+                                        <textarea name="text"
+                                                  id="edit_text"
+                                                  class="form-control"
+                                                  rows="4"
+                                                  placeholder="Share your experience...">{{ user.testimonial.text }}</textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="toggleEditMode()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'create-testimonial' %}">
+                                {% csrf_token %}
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Rating</label>
+                                        <div class="d-flex gap-2 flex-row-reverse justify-content-end">
+                                            {% for value, label in testimonial_form.rating.field.widget.choices %}
+                                                <input type="radio"
+                                                       class="btn-check"
+                                                       name="rating"
+                                                       id="rating-{{ value }}"
+                                                       value="{{ value }}"
+                                                       {% if value == 5 %}checked{% endif %}>
+                                                <label class="btn btn-outline-warning" for="rating-{{ value }}">
+                                                    <i class="bi bi-star-fill"></i> {{ label }}
+                                                </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="id_text" class="form-label">Your Review</label>
+                                        {{ testimonial_form.text }}
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </main>
+{% endblock %}
+{% block extra_js %}
+    <script>
+        function toggleEditMode() {
+            const viewMode = document.getElementById('view-mode');
+            const viewFooter = document.getElementById('view-footer');
+            const editMode = document.getElementById('edit-mode');
+
+            if (viewMode.style.display === 'none') {
+                viewMode.style.display = 'block';
+                viewFooter.style.display = 'flex';
+                editMode.style.display = 'none';
+            } else {
+                viewMode.style.display = 'none';
+                viewFooter.style.display = 'none';
+                editMode.style.display = 'block';
+            }
+        }
+    </script>
 {% endblock %}

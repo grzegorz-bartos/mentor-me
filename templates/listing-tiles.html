@@ -24,18 +24,12 @@
                                 <a href="{% url 'listing-detail' listing.id %}">{{ listing.title }}</a>
                             </h3>
                             <p class="description">{{ listing.description|truncatechars:140 }}</p>
-                            <div class="trainer d-flex justify-content-between align-items-center">
+                            <div class="trainer d-flex align-items-center">
                                 <div class="trainer-profile d-flex align-items-center">
                                     <img src="{{ listing.user.avatar_url }}"
                                          class="img-fluid rounded-circle me-2"
                                          alt="Avatar for {{ listing.user.display_name }}">
-                                    <div>
-                                        <span class="trainer-link d-block">{{ listing.user.display_name }}</span>
-                                        <small class="text-muted">{{ listing.user.role }}</small>
-                                    </div>
-                                </div>
-                                <div class="trainer-rank text-end">
-                                    <small class="text-muted">Posted {{ listing.created_at|date:"M j, Y" }}</small>
+                                    <span class="trainer-link">{{ listing.user.display_name }}</span>
                                 </div>
                             </div>
                         </div>

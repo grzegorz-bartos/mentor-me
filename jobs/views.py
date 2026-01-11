@@ -47,36 +47,9 @@ class JobDetailView(DetailView):
         )
 
 
-class TakeJobView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        job = get_object_or_404(Job, pk=pk, mode=Job.Mode.FIRST_COME)
-
-        if job.user == request.user:
-            messages.error(request, "You cannot take your own job.")
-            return redirect("job-detail", pk=job.pk)
-
-        if job.status != Job.Status.OPEN:
-            messages.error(request, "This job is no longer available.")
-            return redirect("job-detail", pk=job.pk)
-
-        if not request.user.can_take_jobs:
-            messages.error(request, "Upgrade to Freelancer to take jobs.")
-            return redirect("pricing")
-
-        Proposal.objects.update_or_create(
-            job=job, user=request.user, defaults={"is_accepted": True}
-        )
-        job.status = Job.Status.IN_PROGRESS
-        job.save(update_fields=["status"])
-        messages.success(request, f"You have taken the job: {job.title}")
-        return redirect("job-detail", pk=job.pk)
-
-
 class SubmitOfferView(LoginRequiredMixin, View):
     def get(self, request, pk):
-        job = get_object_or_404(
-            Job, pk=pk, status=Job.Status.OPEN, mode=Job.Mode.OFFERS
-        )
+        job = get_object_or_404(Job, pk=pk, status=Job.Status.OPEN)
 
         if job.user == request.user:
             messages.error(request, "You cannot submit an offer to your own job.")
@@ -90,9 +63,7 @@ class SubmitOfferView(LoginRequiredMixin, View):
         return render(request, "job-offer.html", {"form": form, "job": job})
 
     def post(self, request, pk):
-        job = get_object_or_404(
-            Job, pk=pk, status=Job.Status.OPEN, mode=Job.Mode.OFFERS
-        )
+        job = get_object_or_404(Job, pk=pk, status=Job.Status.OPEN)
 
         if job.user == request.user:
             messages.error(request, "You cannot submit an offer to your own job.")

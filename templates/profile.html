@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
 {% block content %}
     <main class="main">
         <div class="page-title" data-aos="fade">
@@ -7,7 +9,7 @@
                     <div class="row d-flex justify-content-center text-center">
                         <div class="col-lg-8">
                             <h1>My Profile</h1>
-                            <p class="mb-0">Manage your plan and see your stuff at a glance.</p>
+                            <p class="mb-0">Manage your account, plan, and see your stuff at a glance.</p>
                         </div>
                     </div>
                 </div>
@@ -16,29 +18,103 @@
         <section class="section">
             <div class="container" data-aos="fade-up">
                 <div class="row gy-4">
-                    <!-- Plan card -->
                     <div class="col-lg-4">
                         <div class="p-4 border rounded-3 h-100">
-                            <h5 class="mb-3">Current Plan</h5>
-                            <p class="mb-1">
-                                <span class="badge bg-success">{{ user.role }}</span>
-                                {% if subscription and subscription.plan %}
-                                    <span class="text-muted ms-2">({{ subscription.plan.name }})</span>
-                                {% endif %}
-                            </p>
-                            <div class="mt-3">
-                                {% for p in plans %}
-                                    {% if p.level == current_plan_level %}
-                                        <button class="btn btn-secondary btn-sm me-2 mb-2" disabled>{{ p.name }}</button>
-                                    {% else %}
-                                        <a class="btn btn-outline-primary btn-sm me-2 mb-2"
-                                           href="{% url 'change-plan' p.id %}?next={{ request.path }}">{{ p.name }}</a>
+                            <h5 class="mb-3">Settings</h5>
+                            <div class="mb-4">
+                                <h6 class="mb-2">Account Overview</h6>
+                                <p class="mb-1">
+                                    <strong>{{ user.display_name }}</strong>
+                                </p>
+                                <p class="mb-1">
+                                    <span class="badge bg-success">{{ user.role }}</span>
+                                </p>
+                                <p class="text-muted small mb-0">Member since {{ user.date_joined|date:"F Y" }}</p>
+                            </div>
+                            <hr>
+                            <div class="mb-4">
+                                <h6 class="mb-3">Profile Information</h6>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center"
+                                         id="username-display-container">
+                                        <div>
+                                            <small class="text-muted d-block">Username</small>
+                                            <span>{{ user.username }}</span>
+                                        </div>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary"
+                                                onclick="editField('username')">Edit</button>
+                                    </div>
+                                    <form method="post" id="username-form" style="display: none">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="field" value="username">
+                                        <input type="text"
+                                               name="username"
+                                               class="form-control form-control-sm mb-2"
+                                               value="{{ user.username }}">
+                                        <button type="submit" class="btn btn-primary btn-sm me-2">Save</button>
+                                        <button type="button"
+                                                class="btn btn-secondary btn-sm"
+                                                onclick="cancelEdit('username')">Cancel</button>
+                                    </form>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center"
+                                         id="email-display-container">
+                                        <div>
+                                            <small class="text-muted d-block">Email</small>
+                                            <span>{{ user.email }}</span>
+                                        </div>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary"
+                                                onclick="editField('email')">Edit</button>
+                                    </div>
+                                    <form method="post" id="email-form" style="display: none">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="field" value="email">
+                                        <input type="email"
+                                               name="email"
+                                               class="form-control form-control-sm mb-2"
+                                               value="{{ user.email }}">
+                                        <button type="submit" class="btn btn-primary btn-sm me-2">Save</button>
+                                        <button type="button"
+                                                class="btn btn-secondary btn-sm"
+                                                onclick="cancelEdit('email')">Cancel</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="mb-4">
+                                <h6 class="mb-3">Security</h6>
+                                <a href="{% url 'password_change' %}"
+                                   class="btn btn-outline-primary btn-sm">Change Password</a>
+                            </div>
+                            <hr>
+                            <div>
+                                <h6 class="mb-3">Current Plan</h6>
+                                <p class="mb-2">
+                                    <span class="badge bg-success">{{ user.role }}</span>
+                                    {% if subscription and subscription.plan %}
+                                        <span class="text-muted ms-2">({{ subscription.plan.name }})</span>
                                     {% endif %}
-                                {% endfor %}
+                                </p>
+                                <div class="mt-3">
+                                    {% for p in plans %}
+                                        {% if p.level == current_plan_level %}
+                                            <button class="btn btn-secondary btn-sm me-2 mb-2" disabled>{{ p.name }}</button>
+                                        {% else %}
+                                            <form method="post"
+                                                  action="{% url 'change-plan' p.id %}?next={{ request.path }}"
+                                                  style="display: inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-primary btn-sm me-2 mb-2">{{ p.name }}</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Content column -->
                     <div class="col-lg-8">
                         <!-- Listings -->
                         <div class="p-4 border rounded-3 mb-4">
@@ -63,8 +139,10 @@
                                                         ${{ l.price }}
                                                     {% endif %}
                                                 </span>
-                                                <a href="{% url 'manage-availability' l.id %}" class="btn btn-sm btn-outline-primary">Availability</a>
-                                                <a href="{% url 'listing-delete' l.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                                                <a href="{% url 'manage-availability' l.id %}"
+                                                   class="btn btn-sm btn-outline-primary">Availability</a>
+                                                <a href="{% url 'listing-delete' l.id %}"
+                                                   class="btn btn-sm btn-outline-danger">Delete</a>
                                             </div>
                                         </li>
                                     {% endfor %}
@@ -106,32 +184,30 @@
                                                             —
                                                         {% endif %}
                                                     </div>
-                                                    {% if j.mode == "offers" %}
-                                                        <h6 class="mb-2">Offers</h6>
-                                                        {% if j.proposals.all %}
-                                                            {% for p in j.proposals.all %}
-                                                                <div class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
-                                                                    <div>
-                                                                        <strong>{{ p.user.username }}</strong>
-                                                                        {% if p.price %}<span class="ms-2">${{ p.price }}</span>{% endif %}
-                                                                        {% if p.is_accepted %}<span class="badge bg-success ms-2">Accepted</span>{% endif %}
-                                                                        <div class="text-muted small">{{ p.message }}</div>
-                                                                    </div>
-                                                                    {% if not p.is_accepted %}
-                                                                        <a class="btn btn-outline-success btn-sm"
-                                                                           href="{% url 'job-accept-offer' j.id p.id %}">Accept</a>
-                                                                    {% endif %}
+                                                    <h6 class="mb-2">Offers</h6>
+                                                    {% if j.proposals.all %}
+                                                        {% for p in j.proposals.all %}
+                                                            <div class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
+                                                                <div>
+                                                                    <strong>{{ p.user.username }}</strong>
+                                                                    {% if p.price %}<span class="ms-2">${{ p.price }}</span>{% endif %}
+                                                                    {% if p.is_accepted %}<span class="badge bg-success ms-2">Accepted</span>{% endif %}
+                                                                    <div class="text-muted small">{{ p.message }}</div>
                                                                 </div>
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            <p class="text-muted">No offers yet.</p>
-                                                        {% endif %}
+                                                                {% if not p.is_accepted and j.status == "open" %}
+                                                                    <a class="btn btn-outline-success btn-sm"
+                                                                       href="{% url 'job-accept-offer' j.id p.id %}">Accept</a>
+                                                                {% endif %}
+                                                            </div>
+                                                        {% endfor %}
                                                     {% else %}
-                                                        <p class="text-muted">First-come job — no offers.</p>
+                                                        <p class="text-muted">No offers yet.</p>
                                                     {% endif %}
                                                     <div class="mt-3 d-flex gap-2">
-                                                        <a href="{% url 'job-detail' j.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
-                                                        <a href="{% url 'job-delete' j.id %}" class="btn btn-sm btn-outline-danger">Delete Job</a>
+                                                        <a href="{% url 'job-detail' j.id %}"
+                                                           class="btn btn-sm btn-outline-primary">View Details</a>
+                                                        <a href="{% url 'job-delete' j.id %}"
+                                                           class="btn btn-sm btn-outline-danger">Delete Job</a>
                                                     </div>
                                                 </div>
                                             </div>
@@ -152,9 +228,7 @@
                                             <div>
                                                 <strong>{{ p.job.title }}</strong>
                                                 <small class="text-muted ms-2">({{ p.job.get_status_display }})</small>
-                                                {% if p.message %}
-                                                    <div class="text-muted small mt-1">{{ p.message|truncatechars:100 }}</div>
-                                                {% endif %}
+                                                {% if p.message %}<div class="text-muted small mt-1">{{ p.message|truncatechars:100 }}</div>{% endif %}
                                             </div>
                                             <div class="d-flex align-items-center gap-2">
                                                 <span>
@@ -165,7 +239,8 @@
                                                     {% endif %}
                                                     {% if p.is_accepted %}<span class="badge bg-success ms-2">Accepted</span>{% endif %}
                                                 </span>
-                                                <a href="{% url 'job-detail' p.job.id %}" class="btn btn-sm btn-outline-primary">View Job</a>
+                                                <a href="{% url 'job-detail' p.job.id %}"
+                                                   class="btn btn-sm btn-outline-primary">View Job</a>
                                             </div>
                                         </li>
                                     {% endfor %}
@@ -186,13 +261,120 @@
                         <div class="p-4 border rounded-3 mt-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">My Booked Lessons (As Student)</h5>
-                                <a class="btn btn-outline-primary btn-sm" href="{% url 'student-bookings' %}">View My Lessons</a>
+                                <a class="btn btn-outline-primary btn-sm"
+                                   href="{% url 'student-bookings' %}">View My Lessons</a>
                             </div>
                             <p class="text-muted small mb-0 mt-2">Lessons you have booked with tutors</p>
+                        </div>
+                        <div class="p-4 border rounded-3 mt-4">
+                            <h5 class="mb-3">Reviews Received</h5>
+                            {% if reviews_received %}
+                                <div class="row gy-3">
+                                    {% for review in reviews_received %}
+                                        <div class="col-12">
+                                            <div class="border rounded-3 p-3">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ review.reviewer.avatar_url }}"
+                                                             class="rounded-circle me-2"
+                                                             alt="{{ review.reviewer.display_name }}"
+                                                             width="40"
+                                                             height="40">
+                                                        <div>
+                                                            <strong>{{ review.reviewer.display_name }}</strong>
+                                                            <div class="text-muted small">{{ review.created_at|date:"M j, Y" }}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-warning" style="font-size: 1.2rem;">
+                                                        {% if review.rating == 5 %}
+                                                            ★★★★★
+                                                        {% elif review.rating == 4 %}
+                                                            ★★★★☆
+                                                        {% elif review.rating == 3 %}
+                                                            ★★★☆☆
+                                                        {% elif review.rating == 2 %}
+                                                            ★★☆☆☆
+                                                        {% elif review.rating == 1 %}
+                                                            ★☆☆☆☆
+                                                        {% else %}
+                                                            ☆☆☆☆☆
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <p class="mb-0">{{ review.comment }}</p>
+                                                {% if review.booking %}<small class="text-muted">For: {{ review.booking.listing.title }}</small>{% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted mb-0">No reviews yet.</p>
+                            {% endif %}
+                        </div>
+                        <div class="p-4 border rounded-3 mt-4">
+                            <h5 class="mb-3">Reviews Given</h5>
+                            {% if reviews_given %}
+                                <div class="row gy-3">
+                                    {% for review in reviews_given %}
+                                        <div class="col-12">
+                                            <div class="border rounded-3 p-3">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ review.reviewed_user.avatar_url }}"
+                                                             class="rounded-circle me-2"
+                                                             alt="{{ review.reviewed_user.display_name }}"
+                                                             width="40"
+                                                             height="40">
+                                                        <div>
+                                                            <strong>{{ review.reviewed_user.display_name }}</strong>
+                                                            <div class="text-muted small">{{ review.created_at|date:"M j, Y" }}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="text-warning" style="font-size: 1.2rem;">
+                                                            {% if review.rating == 5 %}
+                                                                ★★★★★
+                                                            {% elif review.rating == 4 %}
+                                                                ★★★★☆
+                                                            {% elif review.rating == 3 %}
+                                                                ★★★☆☆
+                                                            {% elif review.rating == 2 %}
+                                                                ★★☆☆☆
+                                                            {% elif review.rating == 1 %}
+                                                                ★☆☆☆☆
+                                                            {% else %}
+                                                                ☆☆☆☆☆
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="d-flex gap-1">
+                                                            <a href="{% url 'edit-review' review.id %}"
+                                                               class="btn btn-sm btn-outline-primary">Edit</a>
+                                                            <form method="post"
+                                                                  action="{% url 'delete-review' review.id %}"
+                                                                  style="margin: 0"
+                                                                  onsubmit="return confirm('Are you sure you want to delete this review?');">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <p class="mb-0">{{ review.comment }}</p>
+                                                {% if review.booking %}<small class="text-muted">For: {{ review.booking.listing.title }}</small>{% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted mb-0">You haven't written any reviews yet.</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
+{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'js/profile-edit.js' %}"></script>
 {% endblock %}

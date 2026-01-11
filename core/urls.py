@@ -4,7 +4,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from home import views as home_views
+from home.views import (
+    AboutView,
+    ContactView,
+    CreateTestimonialView,
+    HomeView,
+    UpdateTestimonialView,
+)
 from jobs.views import (
     AcceptOfferView,
     JobCreateView,
@@ -12,13 +18,15 @@ from jobs.views import (
     JobDetailView,
     JobListView,
     SubmitOfferView,
-    TakeJobView,
 )
 from listings.views import (
     CreateBookingView,
     CreateMentorListingView,
+    CreateReviewView,
     CreateTutorListingView,
     DeleteAvailabilityView,
+    DeleteReviewView,
+    EditReviewView,
     ListingDeleteView,
     ListingDetailView,
     ListingListView,
@@ -33,9 +41,19 @@ from subscriptions.views import ChangePlanView, PricingView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", home_views.HomeView.as_view(), name="home"),
-    path("about/", home_views.AboutView.as_view(), name="about"),
-    path("contact/", home_views.ContactView.as_view(), name="contact"),
+    path("", HomeView.as_view(), name="home"),
+    path("about/", AboutView.as_view(), name="about"),
+    path(
+        "about/testimonial/",
+        CreateTestimonialView.as_view(),
+        name="create-testimonial",
+    ),
+    path(
+        "about/testimonial/update/",
+        UpdateTestimonialView.as_view(),
+        name="update-testimonial",
+    ),
+    path("contact/", ContactView.as_view(), name="contact"),
     path("accounts/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("listings/", ListingListView.as_view(), name="listings"),
@@ -82,6 +100,21 @@ urlpatterns = [
     ),
     path("my-lessons/", StudentBookingsView.as_view(), name="student-bookings"),
     path(
+        "bookings/<int:booking_id>/review/",
+        CreateReviewView.as_view(),
+        name="create-review",
+    ),
+    path(
+        "reviews/<int:review_id>/edit/",
+        EditReviewView.as_view(),
+        name="edit-review",
+    ),
+    path(
+        "reviews/<int:review_id>/delete/",
+        DeleteReviewView.as_view(),
+        name="delete-review",
+    ),
+    path(
         "mentoring/create/",
         CreateMentorListingView.as_view(),
         name="create-mentor-listing",
@@ -90,7 +123,6 @@ urlpatterns = [
     path("jobs/create/", JobCreateView.as_view(), name="job-create"),
     path("jobs/<int:pk>/", JobDetailView.as_view(), name="job-detail"),
     path("jobs/<int:pk>/delete/", JobDeleteView.as_view(), name="job-delete"),
-    path("jobs/<int:pk>/take/", TakeJobView.as_view(), name="job-take"),
     path("jobs/<int:pk>/offer/", SubmitOfferView.as_view(), name="job-offer"),
     path(
         "jobs/<int:job_id>/accept/<int:proposal_id>/",
