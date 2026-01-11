@@ -24,13 +24,20 @@
                                 <a href="{% url 'listing-detail' listing.id %}">{{ listing.title }}</a>
                             </h3>
                             <p class="description">{{ listing.description|truncatechars:140 }}</p>
-                            <div class="trainer d-flex align-items-center">
+                            <div class="trainer d-flex align-items-center justify-content-between">
                                 <div class="trainer-profile d-flex align-items-center">
                                     <img src="{{ listing.user.avatar_url }}"
                                          class="img-fluid rounded-circle me-2"
                                          alt="Avatar for {{ listing.user.display_name }}">
                                     <span class="trainer-link">{{ listing.user.display_name }}</span>
                                 </div>
+                                {% if listing.user.review_count > 0 %}
+                                    <div class="trainer-rank d-flex align-items-center gap-1">
+                                        <span class="text-warning">★</span>
+                                        <span class="fw-bold">{{ listing.user.average_rating }}</span>
+                                        <span class="text-muted small">({{ listing.user.review_count }})</span>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

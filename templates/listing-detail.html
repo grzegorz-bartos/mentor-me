@@ -57,12 +57,30 @@
                                     <img src="{{ listing.user.avatar_url }}"
                                          class="rounded-circle me-2"
                                          alt="{{ listing.user.display_name }}"
-                                         width="40"
-                                         height="40">
-                                    <div>
-                                        <div>{{ listing.user.display_name }}</div>
-                                        <small class="text-muted">{{ listing.user.role }}</small>
+                                         width="50"
+                                         height="50">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong>{{ listing.user.display_name }}</strong>
+                                            {% if listing.user.is_top_rated %}<span class="badge bg-warning text-dark">Top Rated</span>{% endif %}
+                                        </div>
+                                        <small class="text-muted d-block">{{ listing.user.role }}</small>
+                                        {% if listing.user.review_count > 0 %}
+                                            <div class="d-flex align-items-center gap-1 mt-1">
+                                                <span class="text-warning">★</span>
+                                                <strong>{{ listing.user.average_rating }}</strong>
+                                                <small class="text-muted">({{ listing.user.review_count }} review{{ listing.user.review_count|pluralize }})</small>
+                                            </div>
+                                        {% else %}
+                                            <small class="text-muted">No reviews yet</small>
+                                        {% endif %}
                                     </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>{{ listing.user.completed_lessons_count }} lesson{{ listing.user.completed_lessons_count|pluralize }} completed</span>
+                                    <span>Member since {{ listing.user.date_joined|date:"Y" }}</span>
                                 </div>
                             </div>
                             <hr>
@@ -90,12 +108,15 @@
                                     <strong>Your Listing</strong>
                                     <p class="mb-0 small">This is your listing.</p>
                                 </div>
-                                <a href="{% url 'listing-delete' listing.id %}" class="btn btn-danger w-100">Delete Listing</a>
+                                <a href="{% url 'listing-delete' listing.id %}"
+                                   class="btn btn-danger w-100">Delete Listing</a>
                             {% else %}
                                 {% if user.is_authenticated %}
-                                    <a href="{% url 'create-booking' listing.id %}" class="btn btn-primary w-100">Book a Session</a>
+                                    <a href="{% url 'create-booking' listing.id %}"
+                                       class="btn btn-primary w-100">Book a Session</a>
                                 {% else %}
-                                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary w-100">Login to Book</a>
+                                    <a href="{% url 'login' %}?next={{ request.path }}"
+                                       class="btn btn-primary w-100">Login to Book</a>
                                 {% endif %}
                             {% endif %}
                             {% if availabilities %}

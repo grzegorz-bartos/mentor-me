@@ -42,7 +42,7 @@ class Account(AbstractUser):
         return True
 
     @property
-    def can_post_tutor(self) -> bool: # is_tutor():
+    def can_post_tutor(self) -> bool:  # is_tutor():
         return self.role_level >= self.Role.TUTOR
 
     @property
@@ -52,3 +52,26 @@ class Account(AbstractUser):
     @property
     def can_post_mentor(self) -> bool:
         return self.role_level >= self.Role.MENTOR
+
+    @property
+    def average_rating(self) -> float:
+        from django.db.models import Avg
+
+        result = self.reviews_received.aggregate(avg=Avg("rating"))
+        return round(result["avg"], 1) if result["avg"] else 0.0
+
+    @property
+    def review_count(self) -> int:
+        return self.reviews_received.count()
+
+    @property
+    def is_top_rated(self) -> bool:
+        return self.average_rating >= 4.5 and self.review_count >= 10
+
+    @property
+    def completed_lessons_count(self) -> int:
+        from listings.models import Booking
+
+        return Booking.objects.filter(
+            listing__user=self, status=Booking.Status.COMPLETED
+        ).count()
