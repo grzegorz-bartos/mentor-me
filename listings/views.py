@@ -5,15 +5,15 @@ from types import SimpleNamespace
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView
 from django_filters.views import FilterView
 
 from .filters import ListingFilter
-from .forms import AvailabilityForm, BookingForm, ListingCreationForm
-from .models import Availability, Booking, Listing
+from .forms import AvailabilityForm, BookingForm, ListingCreationForm, ReviewForm
+from .models import Availability, Booking, Listing, Review
 
 
 class ListingListView(FilterView):
@@ -196,19 +196,72 @@ class MyBookingsView(LoginRequiredMixin, ListView):
     context_object_name = "bookings"
 
     def get_queryset(self):
-        return Booking.objects.filter(listing__user=self.request.user).select_related(
-            "student", "listing"
+        bookings = (
+            Booking.objects.filter(listing__user=self.request.user)
+            .select_related("student", "listing")
+            .prefetch_related("reviews")
         )
+
+        for booking in bookings:
+            booking.user_has_reviewed = booking.reviews.filter(
+                reviewer=self.request.user
+            ).exists()
+
+        return bookings
 
 
 class UpdateBookingStatusView(LoginRequiredMixin, View):
     def post(self, request, booking_id, status):
-        booking = get_object_or_404(Booking, pk=booking_id, listing__user=request.user)
-        if status in dict(Booking.Status.choices):
+        booking = get_object_or_404(Booking, pk=booking_id)
+
+        is_tutor = booking.listing.user == request.user
+        is_student = booking.student == request.user
+
+        if not (is_tutor or is_student):
+            messages.error(request, "You don't have permission to modify this booking.")
+            return redirect("profile")
+
+        if status == "completed":
+            if is_tutor:
+                booking.tutor_marked_complete = True
+            elif is_student:
+                booking.student_marked_complete = True
+
+            if booking.tutor_marked_complete and booking.student_marked_complete:
+                booking.status = Booking.Status.COMPLETED
+                messages.success(
+                    request, "Booking marked as completed by both parties!"
+                )
+            else:
+                other_party = "student" if is_tutor else "tutor"
+                messages.success(
+                    request,
+                    f"You marked this booking as complete. Waiting for {other_party} to confirm.",
+                )
+
+            booking.save()
+
+        elif status == "unmark_completed":
+            if is_tutor:
+                booking.tutor_marked_complete = False
+            elif is_student:
+                booking.student_marked_complete = False
+
+            if booking.status == Booking.Status.COMPLETED:
+                booking.status = Booking.Status.CONFIRMED
+
+            booking.save()
+            messages.success(request, "Completion mark removed.")
+
+        elif status in dict(Booking.Status.choices):
             booking.status = status
             booking.save()
             messages.success(request, f"Booking {status}.")
-        return redirect("my-bookings")
+
+        if is_tutor:
+            return redirect("my-bookings")
+        else:
+            return redirect("student-bookings")
 
 
 class CreateBookingView(LoginRequiredMixin, CreateView):
@@ -341,9 +394,18 @@ class StudentBookingsView(LoginRequiredMixin, ListView):
     context_object_name = "bookings"
 
     def get_queryset(self):
-        return Booking.objects.filter(student=self.request.user).select_related(
-            "listing", "listing__user"
+        bookings = (
+            Booking.objects.filter(student=self.request.user)
+            .select_related("listing", "listing__user")
+            .prefetch_related("reviews")
         )
+
+        for booking in bookings:
+            booking.user_has_reviewed = booking.reviews.filter(
+                reviewer=self.request.user
+            ).exists()
+
+        return bookings
 
 
 def get_available_slots(request, listing_id):
@@ -423,3 +485,72 @@ def get_available_slots(request, listing_id):
             current_time += timedelta(hours=1)
 
     return JsonResponse({"slots": all_slots})
+
+
+class CreateReviewView(LoginRequiredMixin, View):
+    def get(self, request, booking_id):
+        booking = get_object_or_404(
+            Booking, pk=booking_id, status=Booking.Status.COMPLETED
+        )
+
+        is_tutor = booking.listing.user == request.user
+        is_student = booking.student == request.user
+
+        if not (is_tutor or is_student):
+            messages.error(request, "You don't have permission to review this booking.")
+            return redirect("profile")
+
+        reviewed_user = booking.student if is_tutor else booking.listing.user
+
+        existing_review = Review.objects.filter(
+            reviewer=request.user, booking=booking
+        ).first()
+
+        if existing_review:
+            messages.warning(request, "You have already reviewed this booking.")
+            return redirect("student-bookings" if is_student else "my-bookings")
+
+        form = ReviewForm()
+        return render(
+            request,
+            "create-review.html",
+            {"form": form, "booking": booking, "reviewed_user": reviewed_user},
+        )
+
+    def post(self, request, booking_id):
+        booking = get_object_or_404(
+            Booking, pk=booking_id, status=Booking.Status.COMPLETED
+        )
+
+        is_tutor = booking.listing.user == request.user
+        is_student = booking.student == request.user
+
+        if not (is_tutor or is_student):
+            messages.error(request, "You don't have permission to review this booking.")
+            return redirect("profile")
+
+        reviewed_user = booking.student if is_tutor else booking.listing.user
+
+        existing_review = Review.objects.filter(
+            reviewer=request.user, booking=booking
+        ).first()
+
+        if existing_review:
+            messages.warning(request, "You have already reviewed this booking.")
+            return redirect("student-bookings" if is_student else "my-bookings")
+
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.reviewer = request.user
+            review.reviewed_user = reviewed_user
+            review.booking = booking
+            review.save()
+            messages.success(request, "Review submitted successfully!")
+            return redirect("student-bookings" if is_student else "my-bookings")
+
+        return render(
+            request,
+            "create-review.html",
+            {"form": form, "booking": booking, "reviewed_user": reviewed_user},
+        )

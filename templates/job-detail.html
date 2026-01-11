@@ -10,8 +10,7 @@
                         <div class="col-lg-8">
                             <h1>{{ job.title }}</h1>
                             <p class="mb-0">
-                                <span class="badge bg-primary">{{ job.get_mode_display }}</span>
-                                <span class="badge bg-secondary ms-2">{{ job.get_status_display }}</span>
+                                <span class="badge bg-secondary">{{ job.get_status_display }}</span>
                             </p>
                         </div>
                     </div>
@@ -47,7 +46,7 @@
                             {% endif %}
                         </div>
                         <!-- Proposals Section -->
-                        {% if job.mode == "offers" and job.proposals.all %}
+                        {% if job.proposals.all %}
                             <div class="p-4 border rounded-3 mt-4">
                                 <h4 class="mb-3">Submitted Offers</h4>
                                 {% for proposal in job.proposals.all %}
@@ -65,17 +64,11 @@
                                                 </div>
                                             </div>
                                             <div class="text-end">
-                                                {% if proposal.price %}
-                                                    <div class="h5 mb-0">${{ proposal.price }}</div>
-                                                {% endif %}
-                                                {% if proposal.is_accepted %}
-                                                    <span class="badge bg-success">Accepted</span>
-                                                {% endif %}
+                                                {% if proposal.price %}<div class="h5 mb-0">${{ proposal.price }}</div>{% endif %}
+                                                {% if proposal.is_accepted %}<span class="badge bg-success">Accepted</span>{% endif %}
                                             </div>
                                         </div>
-                                        {% if proposal.message %}
-                                            <p class="mb-2">{{ proposal.message }}</p>
-                                        {% endif %}
+                                        {% if proposal.message %}<p class="mb-2">{{ proposal.message }}</p>{% endif %}
                                         <small class="text-muted">Submitted {{ proposal.created_at|date:"M j, Y" }}</small>
                                         {% if user.is_authenticated and user.id == job.user.id and not proposal.is_accepted and job.status == "open" %}
                                             <div class="mt-2">
@@ -155,15 +148,10 @@
                                     </div>
                                     <a href="{% url 'job-delete' job.id %}" class="btn btn-danger w-100">Delete Job</a>
                                 {% elif job.status == "open" %}
-                                    {% if job.mode == "first" and user.can_take_jobs %}
-                                        <a href="{% url 'job-take' job.id %}"
-                                           class="btn btn-success w-100">Take This Job</a>
-                                    {% elif job.mode == "offers" and user.can_take_jobs %}
-                                        <a href="{% url 'job-offer' job.id %}"
-                                           class="btn btn-primary w-100">Submit Offer</a>
-                                    {% elif not user.can_take_jobs %}
-                                        <a href="{% url 'pricing' %}"
-                                           class="btn btn-outline-secondary w-100">Upgrade to Apply</a>
+                                    {% if user.can_take_jobs %}
+                                        <a href="{% url 'job-offer' job.id %}" class="btn btn-primary w-100">Submit Offer</a>
+                                    {% else %}
+                                        <a href="{% url 'pricing' %}" class="btn btn-outline-secondary w-100">Upgrade to Apply</a>
                                     {% endif %}
                                 {% endif %}
                             {% else %}

@@ -6,12 +6,11 @@ from .models import Job
 
 class JobFilter(django_filters.FilterSet):
     q = django_filters.CharFilter(method="filter_search", label="Search")
-    mode = django_filters.ChoiceFilter(choices=Job.Mode.choices, label="Mode")
     status = django_filters.ChoiceFilter(choices=Job.Status.choices, label="Status")
 
     class Meta:
         model = Job
-        fields = ["mode", "status"]
+        fields = ["status"]
 
     def filter_search(self, queryset, name, value):
         if value:

@@ -87,6 +87,8 @@ class Booking(models.Model):
         max_length=20, choices=Status.choices, default=Status.PENDING
     )
     notes = models.TextField(blank=True)
+    tutor_marked_complete = models.BooleanField(default=False)
+    student_marked_complete = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -112,8 +114,8 @@ class Review(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     comment = models.TextField()
-    booking = models.OneToOneField(
-        Booking, on_delete=models.CASCADE, null=True, blank=True, related_name="review"
+    booking = models.ForeignKey(
+        Booking, on_delete=models.CASCADE, null=True, blank=True, related_name="reviews"
     )
     job = models.ForeignKey(
         "jobs.Job",

@@ -47,22 +47,14 @@
                     {# Filter toolbar #}
                     <div class="col">
                         <form class="row g-2" method="get">
-                            <div class="col-md-4">
+                            <div class="col-md-5">
                                 <input type="text"
                                        name="q"
                                        value="{{ request.GET.q }}"
                                        class="form-control"
                                        placeholder="Search jobs">
                             </div>
-                            <div class="col-md-3">
-                                <select name="mode" class="form-select">
-                                    <option value="">All modes</option>
-                                    <option value="first" {% if request.GET.mode == "first" %}selected{% endif %}>First-come</option>
-                                    <option value="offers"
-                                            {% if request.GET.mode == "offers" %}selected{% endif %}>Offers</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-5">
                                 <select name="status" class="form-select">
                                     <option value="">All status</option>
                                     <option value="open" {% if request.GET.status == "open" %}selected{% endif %}>Open</option>
@@ -111,31 +103,20 @@
                                         <div class="mt-2">
                                             <span class="badge bg-secondary">Your Job</span>
                                         </div>
-                                    {% else %}
+                                    {% elif job.status == "open" %}
                                         <div class="mt-2 d-flex gap-2 flex-wrap">
-                                            {% if job.mode == "first" %}
-                                                {% if user.is_authenticated and user.can_take_jobs %}
-                                                    <a class="btn btn-success btn-sm" href="{% url 'job-take' job.id %}">Take Job</a>
-                                                {% elif user.is_authenticated %}
-                                                    <a class="btn btn-outline-secondary btn-sm disabled">Upgrade to Freelancer to take jobs</a>
-                                                {% else %}
-                                                    <a class="btn btn-success btn-sm"
-                                                       href="{% url 'login' %}?next={% url 'job-take' job.id %}">Login to take</a>
-                                                {% endif %}
-                                            {% elif job.mode == "offers" %}
-                                                {% if user.is_authenticated and user.can_take_jobs %}
-                                                    <a class="btn btn-primary btn-sm" href="{% url 'job-offer' job.id %}">Submit Offer</a>
-                                                {% elif user.is_authenticated %}
-                                                    <a class="btn btn-outline-secondary btn-sm disabled">Upgrade to Freelancer to offer</a>
-                                                {% else %}
-                                                    <a class="btn btn-primary btn-sm"
-                                                       href="{% url 'login' %}?next={% url 'job-offer' job.id %}">Login to offer</a>
-                                                {% endif %}
+                                            {% if user.is_authenticated and user.can_take_jobs %}
+                                                <a class="btn btn-primary btn-sm" href="{% url 'job-offer' job.id %}">Submit Offer</a>
+                                            {% elif user.is_authenticated %}
+                                                <a class="btn btn-outline-secondary btn-sm disabled">Upgrade to Freelancer to offer</a>
+                                            {% else %}
+                                                <a class="btn btn-primary btn-sm"
+                                                   href="{% url 'login' %}?next={% url 'job-offer' job.id %}">Login to offer</a>
                                             {% endif %}
                                         </div>
                                     {% endif %}
                                     {# Owner can accept offers #}
-                                    {% if user.is_authenticated and user.id == job.user_id and job.mode == "offers" %}
+                                    {% if user.is_authenticated and user.id == job.user_id and job.status == "open" %}
                                         <div class="mt-2">
                                             <small class="text-muted d-block mb-1">Offers:</small>
                                             {% for p in job.proposals.all %}
@@ -169,13 +150,13 @@
                 </div>
                 {# Pagination #}
                 {% if is_paginated %}
-                    {% with q=request.GET.q m=request.GET.mode s=request.GET.status %}
+                    {% with q=request.GET.q s=request.GET.status %}
                         <nav aria-label="Page navigation" class="mt-3">
                             <ul class="pagination justify-content-center">
                                 {% if page_obj.has_previous %}
                                     <li class="page-item">
                                         <a class="page-link"
-                                           href="?{% if q %}q={{ q }}&{% endif %}{% if m %}mode={{ m }}&{% endif %}{% if s %}status={{ s }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                                           href="?{% if q %}q={{ q }}&{% endif %}{% if s %}status={{ s }}&{% endif %}page={{ page_obj.previous_page_number }}">
                                             Previous
                                         </a>
                                     </li>
@@ -186,7 +167,7 @@
                                 {% if page_obj.has_next %}
                                     <li class="page-item">
                                         <a class="page-link"
-                                           href="?{% if q %}q={{ q }}&{% endif %}{% if m %}mode={{ m }}&{% endif %}{% if s %}status={{ s }}&{% endif %}page={{ page_obj.next_page_number }}">
+                                           href="?{% if q %}q={{ q }}&{% endif %}{% if s %}status={{ s }}&{% endif %}page={{ page_obj.next_page_number }}">
                                             Next
                                         </a>
                                     </li>

@@ -5,8 +5,8 @@ from .models import Job, Proposal
 
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
-    list_display = ("id", "title", "user", "mode", "status", "created_at")
-    list_filter = ("mode", "status")
+    list_display = ("id", "title", "user", "status", "created_at")
+    list_filter = ("status",)
     search_fields = ("title", "description")
 
 

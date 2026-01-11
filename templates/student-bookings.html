@@ -31,20 +31,91 @@
                                                         </span>
                                                     </h5>
                                                     <p class="mb-2">
-                                                        <strong>Tutor:</strong> {{ booking.listing.user.display_name }}<br>
-                                                        <strong>Date:</strong> {{ booking.date }}<br>
-                                                        <strong>Time:</strong> {{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}<br>
-                                                        <strong>Duration:</strong> {{ booking.duration_hours }} hours<br>
-                                                        <strong>Price:</strong> ${{ booking.listing.price }}{% if booking.listing.rate_unit == "hourly" %}/hour{% endif %}
+                                                        <strong>Tutor:</strong> {{ booking.listing.user.display_name }}
+                                                        <br>
+                                                        <strong>Date:</strong> {{ booking.date }}
+                                                        <br>
+                                                        <strong>Time:</strong> {{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}
+                                                        <br>
+                                                        <strong>Duration:</strong> {{ booking.duration_hours }} hours
+                                                        <br>
+                                                        <strong>Price:</strong> ${{ booking.listing.price }}
+                                                        {% if booking.listing.rate_unit == "hourly" %}/hour{% endif %}
                                                     </p>
                                                     {% if booking.notes %}
                                                         <p class="mb-0">
                                                             <strong>Your Notes:</strong> {{ booking.notes }}
                                                         </p>
                                                     {% endif %}
+                                                    {% if booking.status == 'confirmed' %}
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">
+                                                                {% if booking.student_marked_complete %}
+                                                                    <span class="text-success">✓ You marked complete</span>
+                                                                {% else %}
+                                                                    <span>You haven't marked complete</span>
+                                                                {% endif %}
+                                                                |
+                                                                {% if booking.tutor_marked_complete %}
+                                                                    <span class="text-success">✓ Tutor marked complete</span>
+                                                                {% else %}
+                                                                    <span>Tutor hasn't marked complete</span>
+                                                                {% endif %}
+                                                            </small>
+                                                        </div>
+                                                    {% endif %}
                                                 </div>
-                                                <div>
-                                                    <a href="{% url 'listing-detail' booking.listing.id %}" class="btn btn-outline-primary btn-sm">View Listing</a>
+                                                <div class="d-flex flex-column gap-2 align-items-end">
+                                                    <a href="{% url 'listing-detail' booking.listing.id %}"
+                                                       class="btn btn-outline-primary btn-sm">View Listing</a>
+                                                    {% if booking.status == 'pending' %}
+                                                        <form method="post"
+                                                              action="{% url 'update-booking-status' booking.id 'cancelled' %}"
+                                                              style="margin: 0">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger btn-sm">Cancel Booking</button>
+                                                        </form>
+                                                    {% elif booking.status == 'confirmed' %}
+                                                        <div class="d-flex gap-2">
+                                                            {% if not booking.student_marked_complete %}
+                                                                <form method="post"
+                                                                      action="{% url 'update-booking-status' booking.id 'completed' %}"
+                                                                      style="margin: 0">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-success btn-sm">Mark Complete</button>
+                                                                </form>
+                                                            {% else %}
+                                                                <form method="post"
+                                                                      action="{% url 'update-booking-status' booking.id 'unmark_completed' %}"
+                                                                      style="margin: 0">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Unmark Complete</button>
+                                                                </form>
+                                                            {% endif %}
+                                                            <form method="post"
+                                                                  action="{% url 'update-booking-status' booking.id 'cancelled' %}"
+                                                                  style="margin: 0">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                                                            </form>
+                                                        </div>
+                                                    {% elif booking.status == 'completed' %}
+                                                        <div class="d-flex flex-column gap-2">
+                                                            <span class="badge bg-success">Completed by both parties</span>
+                                                            {% if not booking.user_has_reviewed %}
+                                                                <a href="{% url 'create-review' booking.id %}"
+                                                                   class="btn btn-primary btn-sm">Leave Review</a>
+                                                            {% else %}
+                                                                <span class="badge bg-info">Review Submitted</span>
+                                                            {% endif %}
+                                                            <form method="post"
+                                                                  action="{% url 'update-booking-status' booking.id 'unmark_completed' %}"
+                                                                  style="margin: 0">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-outline-secondary btn-sm">Unmark Complete</button>
+                                                            </form>
+                                                        </div>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>

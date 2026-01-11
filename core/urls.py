@@ -18,11 +18,11 @@ from jobs.views import (
     JobDetailView,
     JobListView,
     SubmitOfferView,
-    TakeJobView,
 )
 from listings.views import (
     CreateBookingView,
     CreateMentorListingView,
+    CreateReviewView,
     CreateTutorListingView,
     DeleteAvailabilityView,
     ListingDeleteView,
@@ -98,6 +98,11 @@ urlpatterns = [
     ),
     path("my-lessons/", StudentBookingsView.as_view(), name="student-bookings"),
     path(
+        "bookings/<int:booking_id>/review/",
+        CreateReviewView.as_view(),
+        name="create-review",
+    ),
+    path(
         "mentoring/create/",
         CreateMentorListingView.as_view(),
         name="create-mentor-listing",
@@ -106,7 +111,6 @@ urlpatterns = [
     path("jobs/create/", JobCreateView.as_view(), name="job-create"),
     path("jobs/<int:pk>/", JobDetailView.as_view(), name="job-detail"),
     path("jobs/<int:pk>/delete/", JobDeleteView.as_view(), name="job-delete"),
-    path("jobs/<int:pk>/take/", TakeJobView.as_view(), name="job-take"),
     path("jobs/<int:pk>/offer/", SubmitOfferView.as_view(), name="job-offer"),
     path(
         "jobs/<int:job_id>/accept/<int:proposal_id>/",

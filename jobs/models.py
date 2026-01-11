@@ -4,10 +4,6 @@ from django.utils import timezone
 
 
 class Job(models.Model):
-    class Mode(models.TextChoices):
-        OFFERS = "offers", "Offers (client picks)"
-        FIRST_COME = "first", "First-come"
-
     class Status(models.TextChoices):
         OPEN = "open", "Open"
         IN_PROGRESS = "in_progress", "In Progress"
@@ -21,7 +17,6 @@ class Job(models.Model):
     description = models.TextField()
     budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     subject = models.CharField(max_length=120, blank=True)
-    mode = models.CharField(max_length=10, choices=Mode.choices, default=Mode.OFFERS)
     status = models.CharField(
         max_length=20, choices=Status.choices, default=Status.OPEN
     )
