@@ -25,6 +25,8 @@ from listings.views import (
     CreateReviewView,
     CreateTutorListingView,
     DeleteAvailabilityView,
+    DeleteReviewView,
+    EditReviewView,
     ListingDeleteView,
     ListingDetailView,
     ListingListView,
@@ -101,6 +103,16 @@ urlpatterns = [
         "bookings/<int:booking_id>/review/",
         CreateReviewView.as_view(),
         name="create-review",
+    ),
+    path(
+        "reviews/<int:review_id>/edit/",
+        EditReviewView.as_view(),
+        name="edit-review",
+    ),
+    path(
+        "reviews/<int:review_id>/delete/",
+        DeleteReviewView.as_view(),
+        name="delete-review",
     ),
     path(
         "mentoring/create/",

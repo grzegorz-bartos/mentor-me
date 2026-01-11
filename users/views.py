@@ -59,6 +59,9 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         context["reviews_received"] = user.reviews_received.select_related(
             "reviewer", "booking"
         ).order_by("-created_at")[:10]
+        context["reviews_given"] = user.reviews_given.select_related(
+            "reviewed_user", "booking"
+        ).order_by("-created_at")[:10]
 
         return context
 

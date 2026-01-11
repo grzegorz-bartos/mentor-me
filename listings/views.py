@@ -554,3 +554,38 @@ class CreateReviewView(LoginRequiredMixin, View):
             "create-review.html",
             {"form": form, "booking": booking, "reviewed_user": reviewed_user},
         )
+
+
+class EditReviewView(LoginRequiredMixin, View):
+    def get(self, request, review_id):
+        review = get_object_or_404(Review, pk=review_id, reviewer=request.user)
+
+        form = ReviewForm(instance=review)
+        return render(
+            request,
+            "edit-review.html",
+            {"form": form, "review": review},
+        )
+
+    def post(self, request, review_id):
+        review = get_object_or_404(Review, pk=review_id, reviewer=request.user)
+
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Review updated successfully!")
+            return redirect("profile")
+
+        return render(
+            request,
+            "edit-review.html",
+            {"form": form, "review": review},
+        )
+
+
+class DeleteReviewView(LoginRequiredMixin, View):
+    def post(self, request, review_id):
+        review = get_object_or_404(Review, pk=review_id, reviewer=request.user)
+        review.delete()
+        messages.success(request, "Review deleted successfully!")
+        return redirect("profile")
