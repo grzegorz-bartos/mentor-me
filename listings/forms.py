@@ -10,10 +10,8 @@ class ListingCreationForm(forms.ModelForm):
             "title",
             "description",
             "price",
-            "rate_unit",
             "subject",
             "category",
-            "max_hours_per_booking",
         ]
 
 

@@ -9,10 +9,6 @@ class Listing(models.Model):
         TUTOR = "tutor", "Tutor"
         MENTOR = "mentor", "Mentor"
 
-    class RateUnit(models.TextChoices):
-        HOURLY = "hourly", "per hour"
-        FIXED = "fixed", "fixed"
-
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="listings"
     )
@@ -22,13 +18,9 @@ class Listing(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    rate_unit = models.CharField(
-        max_length=10, choices=RateUnit.choices, default=RateUnit.HOURLY
-    )
     subject = models.CharField(max_length=120, blank=True)
     category = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
-    max_hours_per_booking = models.PositiveIntegerField(default=3)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

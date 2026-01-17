@@ -12,13 +12,7 @@
                         <div class="course-content">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <p class="category">{{ listing.subject|default:listing.category|default:"General" }}</p>
-                                <p class="price">
-                                    {% if listing.rate_unit == "hourly" %}
-                                        ${{ listing.price }}/hour
-                                    {% else %}
-                                        ${{ listing.price }}
-                                    {% endif %}
-                                </p>
+                                <p class="price">${{ listing.price }}/hour</p>
                             </div>
                             <h3>
                                 <a href="{% url 'listing-detail' listing.id %}">{{ listing.title }}</a>

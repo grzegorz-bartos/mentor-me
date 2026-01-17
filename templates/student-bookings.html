@@ -39,8 +39,7 @@
                                                         <br>
                                                         <strong>Duration:</strong> {{ booking.duration_hours }} hours
                                                         <br>
-                                                        <strong>Price:</strong> ${{ booking.listing.price }}
-                                                        {% if booking.listing.rate_unit == "hourly" %}/hour{% endif %}
+                                                        <strong>Price:</strong> ${{ booking.listing.price }}/hour
                                                     </p>
                                                     {% if booking.notes %}
                                                         <p class="mb-0">

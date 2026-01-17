@@ -86,17 +86,7 @@
                             <hr>
                             <div class="mb-3">
                                 <strong>Price:</strong>
-                                <div>
-                                    {% if listing.rate_unit == "hourly" %}
-                                        ${{ listing.price }}/hour
-                                    {% else %}
-                                        ${{ listing.price }}
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <strong>Max Session Length:</strong>
-                                <div>{{ listing.max_hours_per_booking }} hour{{ listing.max_hours_per_booking|pluralize }}</div>
+                                <div>${{ listing.price }}/hour</div>
                             </div>
                             <div class="mb-3">
                                 <strong>Posted:</strong>

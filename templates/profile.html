@@ -132,13 +132,7 @@
                                                 <small class="text-muted ms-2">({{ l.get_type_display }})</small>
                                             </span>
                                             <div class="d-flex align-items-center gap-2">
-                                                <span>
-                                                    {% if l.rate_unit == "hourly" %}
-                                                        ${{ l.price }}/hour
-                                                    {% else %}
-                                                        ${{ l.price }}
-                                                    {% endif %}
-                                                </span>
+                                                <span>${{ l.price }}/hour</span>
                                                 <a href="{% url 'manage-availability' l.id %}"
                                                    class="btn btn-sm btn-outline-primary">Availability</a>
                                                 <a href="{% url 'listing-delete' l.id %}"
